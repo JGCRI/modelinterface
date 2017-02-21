@@ -80,6 +80,12 @@ public class XMLDB {
      */
     private String contName = null;
 
+    /**
+     * Was context adopted. If the context was adopted then we will
+     * not attempt to close it when it is time to close the DB.
+     */
+    private boolean wasContextAdopted;
+
 	/**
 	 * Gets the instance of the xml database.
 	 * @warning If the database is not open it will return null, ideally it
@@ -100,7 +106,12 @@ public class XMLDB {
 	 * @throws Exception If a database is already open or there was an error opening the database.
 	 */ 
 	public static void openDatabase(String dbLocation) throws Exception {
-        openDatabase(dbLocation, null);
+		// WARNING: not thread safe
+		if(xmldbInstance != null) {
+			throw new Exception("Could not open databse because "+xmldbInstance.contName+
+					" is still open");
+		}
+        xmldbInstance = new XMLDB(dbLocation);
     }
 	/**
 	 * Opens a new xml database at the given location and potentially an existing context.
@@ -111,13 +122,13 @@ public class XMLDB {
      *                  from disk.
 	 * @throws Exception If a database is already open or there was an error opening the database.
 	 */ 
-	public static void openDatabase(String dbLocation, Context contextIn) throws Exception {
+	public static void openDatabase(Context contextIn) throws Exception {
 		// WARNING: not thread safe
 		if(xmldbInstance != null) {
 			throw new Exception("Could not open databse because "+xmldbInstance.contName+
 					" is still open");
 		}
-		xmldbInstance = new XMLDB(dbLocation, contextIn);
+		xmldbInstance = new XMLDB(contextIn);
 	}
 
 	/**
@@ -127,7 +138,9 @@ public class XMLDB {
 		// WARNING: not thread safe
 		if(xmldbInstance != null) {
 			try {
-                new Close().execute(xmldbInstance.context);
+                if(!xmldbInstance.wasContextAdopted) {
+                    new Close().execute(xmldbInstance.context);
+                }
             } catch (BaseXException e) {
                 e.printStackTrace();
 			} finally {
@@ -138,10 +151,15 @@ public class XMLDB {
 		}
 	}
 
-	private XMLDB(String db, Context contextIn) throws Exception {
-		openDB(db, contextIn);
+	private XMLDB(String db) throws Exception {
+        wasContextAdopted = false;
+		openDB(db);
+    }
+	private XMLDB(Context contextIn) throws Exception {
+        wasContextAdopted = true;
+        context = contextIn;
 	}
-	private void openDB(String dbPath, Context contextIn) throws Exception {
+	private void openDB(String dbPath) throws Exception {
         // We need to seperate the path to the DB and the container name (last name in the path)
         File dbLocationFile = new File(dbPath).getAbsoluteFile();
         // The path may be a relative path so we must convert it to absolute here.
@@ -160,21 +178,15 @@ public class XMLDB {
         // and use it as the base path for finding all collections/containers
         System.setProperty("org.basex.DBPATH", path);
 
-        if(contextIn == null) {
-            context = new Context();
-            // Set some default behaviors such as no indexing etc
-            // TODO: experiment with these
-            context.options.set(MainOptions.ATTRINDEX, false);
-            context.options.set(MainOptions.FTINDEX, false);
-            context.options.set(MainOptions.UPDINDEX, false);
-            context.options.set(MainOptions.CHOP, true);
-            context.options.set(MainOptions.ADDCACHE, true);
-            context.options.set(MainOptions.INTPARSE, true);
-        } else {
-            // We are just going to adopt an already open database context
-            context = contextIn;
-            return;
-        }
+        context = new Context();
+        // Set some default behaviors such as no indexing etc
+        // TODO: experiment with these
+        context.options.set(MainOptions.ATTRINDEX, false);
+        context.options.set(MainOptions.FTINDEX, false);
+        context.options.set(MainOptions.UPDINDEX, false);
+        context.options.set(MainOptions.CHOP, true);
+        context.options.set(MainOptions.ADDCACHE, true);
+        context.options.set(MainOptions.INTPARSE, true);
 
         /*
         // The Check command will opent the container if it already exists or create

@@ -61,7 +61,8 @@ public class RunFunctionQueryBinding implements QueryBinding {
 		regionListBuilder.delete(regionListBuilder.length()-2, regionListBuilder.length()).append(")");
 		String ret = qg.getXPath().replace("(:scenarios:)", scenarioListBuilder.toString());
 		ret = ret.replace("(:regions:)", regionListBuilder.toString());
-		ret = ret.replace("(:collection:)", "'"+collection+"'");
+		//ret = ret.replace("(:collection:)", "'"+collection+"'");
+		ret = ret.replace("(:collection:)", "()");
 		return ret;
 	}
 }

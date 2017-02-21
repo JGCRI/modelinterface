@@ -55,7 +55,8 @@ public class StandardQueryBinding implements QueryBinding {
 			}
 		}
 		for(String currQuery : queries) {
-			queryBuff.append("collection('").append(collection).append("')");
+			//queryBuff.append("collection('").append(collection).append("')");
+			queryBuff.append("collection()");
 			if(scnFilter != null) {
 				queryBuff.append(scnFilter);
 			}

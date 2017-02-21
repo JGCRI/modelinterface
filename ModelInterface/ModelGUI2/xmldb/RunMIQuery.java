@@ -84,12 +84,7 @@ public class RunMIQuery extends QueryModule {
                 throw new Exception("Regions argument of unexpected type: "+aRegionNames.toString());
             }
             QueryGenerator qg = new QueryGenerator(aMIQury.toJava());
-            if(XMLDB.getInstance() == null) {
-                String dbPath = queryContext.context.soptions.get(StaticOptions.DBPATH);
-                String dbName = queryContext.context.databases.list().get(0);
-                String fullName = dbPath + System.getProperty("file.separator") + dbName;
-                XMLDB.openDatabase(fullName, queryContext.context);
-            }
+            XMLDB.openDatabase(queryContext.context);
             String currScen = scenarioNames[0];
             Vector<ScenarioListItem> scenarios = DbViewer.getScenarios();
             ScenarioListItem[] found = null;
@@ -111,6 +106,7 @@ public class RunMIQuery extends QueryModule {
             e.printStackTrace();
             throw new QueryException(e);
         } finally {
+            XMLDB.closeDatabase();
             // reset STDOUT
             System.setOut(stdout);
         }
