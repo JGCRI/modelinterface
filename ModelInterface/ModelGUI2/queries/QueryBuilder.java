@@ -71,7 +71,9 @@ public abstract class QueryBuilder implements java.io.Serializable {
 	public abstract JComponentAdapter updateList(JComponentAdapter list, JLabel label);
 	public abstract void updateSelected(JComponentAdapter list);
 	public abstract String createListPath(int level);
-	public abstract String getCompleteXPath(Object[] regions);
+	public String getCompleteXPath(Object[] regions) {
+        return qg.defaultCompleteXPath(regions);
+    }
 	public abstract String getXMLName();
 
 	public String getNodeLevelPath() {

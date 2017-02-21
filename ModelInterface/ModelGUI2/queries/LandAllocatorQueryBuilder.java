@@ -274,28 +274,6 @@ public class LandAllocatorQueryBuilder extends QueryBuilder {
 		qg.group = false;
 		qg.sumAll = false;
 	}
-	public String getCompleteXPath(Object[] regions) {
-		StringBuilder ret = new StringBuilder();
-		boolean added = false;
-
-		if(((String)regions[0]).equals("Global")) {
-			ret.append(regionQueryPortion+"/");
-			regions = new Object[0];
-		}
-		for(int i = 0; i < regions.length; ++i) {
-			if(!added) {
-				ret.append(regionQueryPortion.substring(0, regionQueryPortion.length()-1)).append(" and (");
-				added = true;
-			} else {
-				ret.append(" or ");
-			}
-			ret.append("(@name='").append(regions[i]).append("')");
-		}
-		if(added) {
-			ret.append(" )]/");
-		}
-		return ret.append(qg.getXPath()).toString();
-	}
 	private boolean passedIt;
         /*
 	private Map addToDataTree(ANode currNode, Map dataTree) throws Exception {

@@ -29,26 +29,22 @@
 */
 package ModelInterface.ModelGUI2.xmldb;
 
-import org.basex.core.jobs.Job;
+import org.basex.query.value.node.ANode;
 
 /**
- * A simple wrapper on a BaseX Job that simply provides the interface
- * to interrupt a running query.
+ * A simple struct to hold an item in the parent path of a query result.
  * @author Pralit Patel.
  */ 
-public class DbProcInterrupt {
-    Job dbProc = null;
-	public DbProcInterrupt() {
-	}
-	public DbProcInterrupt(Job dbProcIn) {
-        dbProc = dbProcIn;
-	}
-    public void setProc(Job dbProcIn) {
-        dbProc = dbProcIn;
-	}
-    public void interrupt() {
-        if(dbProc != null) {
-            dbProc.stop();
-        }
+public class QueryRow {
+    public ANode id;
+
+    public String key;
+
+    public String value;
+
+    public QueryRow(ANode id) {
+        this.id = id;
+        this.key = null;
+        this.value = null;
     }
 }

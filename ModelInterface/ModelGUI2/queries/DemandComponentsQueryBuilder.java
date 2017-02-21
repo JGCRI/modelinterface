@@ -400,23 +400,22 @@ public class DemandComponentsQueryBuilder extends QueryBuilder {
 	public String getCompleteXPath(Object[] regions) {
 		boolean added = false;
 		StringBuffer ret = new StringBuffer();
-		if(((String)regions[0]).equals("Global")) {
+		if(regions.length == 0 || regions[0].equals("Global")) {
 			ret.append(regionQueryPortion+"/");
-			//regionSel = new int[0]; 
-			regions = new Object[0];
-		}
-		for(int i = 0; i < regions.length; ++i) {
-			if(!added) {
-				ret.append(regionQueryPortion.substring(0, regionQueryPortion.length()-1)).append(" and (");
-				added = true;
-			} else {
-				ret.append(" or ");
-			}
-			ret.append("(@name='").append(regions[i]).append("')");
-		}
-		if(added) {
-			ret.append(" )]/");
-		}
+        } else {
+            for(int i = 0; i < regions.length; ++i) {
+                if(!added) {
+                    ret.append(regionQueryPortion.substring(0, regionQueryPortion.length()-1)).append(" and (");
+                    added = true;
+                } else {
+                    ret.append(" or ");
+                }
+                ret.append("(@name='").append(regions[i]).append("')");
+            }
+            if(added) {
+                ret.append(" )]/");
+            }
+        }
 		int pipeIndex = qg.getXPath().indexOf('|');
 		String part1 = qg.getXPath().substring(0, pipeIndex+1);
 		String part2 = qg.getXPath().substring(pipeIndex+1, qg.getXPath().length());

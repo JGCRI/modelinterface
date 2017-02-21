@@ -274,7 +274,7 @@ public class MarketQueryBuilder extends QueryBuilder {
 	public String getCompleteXPath(Object[] regions) {
 		StringBuffer ins = new StringBuffer();
 		boolean added = false;
-		if(((String)regions[regions.length-1]).equals("Global")) {
+		if(regions.length == 0 || ((String)regions[regions.length-1]).equals("Global")) {
 			return qg.xPath;
 		}
 		for(int i = 0; i < regions.length; ++i) {

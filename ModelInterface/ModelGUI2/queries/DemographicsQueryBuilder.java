@@ -377,32 +377,6 @@ public class DemographicsQueryBuilder extends QueryBuilder {
         // TODO: reimplement?
         return null;
 	}
-	public String getCompleteXPath(Object[] regions)  {
-		boolean added = false;
-		StringBuffer ret = new StringBuffer();
-        boolean isGlobal;
-		if(((String)regions[0]).equals("Global")) {
-			ret.append(regionQueryPortion+"/");
-			//regionSel = new int[0]; 
-			regions = new Object[0];
-			isGlobal = true;
-		} else {
-			isGlobal = false;
-		}
-		for(int i = 0; i < regions.length; ++i) {
-			if(!added) {
-				ret.append(regionQueryPortion.substring(0, regionQueryPortion.length()-1) + " and (");
-				added = true;
-			} else {
-				ret.append(" or ");
-			}
-			ret.append("(@name='").append(regions[i]).append("')");
-		}
-		if(!isGlobal) {
-			ret.append(" )]/");
-		}
-		return ret.append(qg.getXPath()).toString();
-	}
 	public String getXMLName() {
 		return xmlName;
 	}

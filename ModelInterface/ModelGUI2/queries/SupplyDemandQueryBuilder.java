@@ -379,28 +379,6 @@ public class SupplyDemandQueryBuilder extends QueryBuilder {
         // TODO: reimplement?
         return null;
 	}
-	public String getCompleteXPath(Object[] regions) {
-		boolean added = false;
-		StringBuffer ret = new StringBuffer();
-		if(((String)regions[0]).equals("Global")) {
-			ret.append(regionQueryPortion+"/");
-			//regionSel = new int[0]; 
-			regions = new Object[0];
-		}
-		for(int i = 0; i < regions.length; ++i) {
-			if(!added) {
-				ret.append(regionQueryPortion.substring(0, regionQueryPortion.length()-1)).append(" and (");
-				added = true;
-			} else {
-				ret.append(" or ");
-			}
-			ret.append("(@name='").append(regions[i]).append("')");
-		}
-		if(added) {
-			ret.append(" )]/");
-		}
-		return ret.append(qg.getXPath()).toString();
-	}
 	public String getXMLName() {
 		return xmlName;
 	}

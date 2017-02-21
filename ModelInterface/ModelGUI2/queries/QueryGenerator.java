@@ -32,6 +32,7 @@ package ModelInterface.ModelGUI2.queries;
 import ModelInterface.InterfaceMain;
 import ModelInterface.common.DataPair;
 import ModelInterface.ModelGUI2.xmldb.XMLDB;
+import ModelInterface.ModelGUI2.xmldb.QueryRow;
 import ModelInterface.ModelGUI2.DbViewer;
 import ModelInterface.ModelGUI2.undo.EditQueryUndoableEdit;
 import ModelInterface.ModelGUI2.undo.MiUndoableEditListener;
@@ -50,6 +51,7 @@ import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 import java.util.Iterator;
+import java.util.ListIterator;
 import java.util.EventListener;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -66,6 +68,7 @@ import java.awt.event.KeyEvent;
 import java.util.regex.*;
 
 import org.basex.query.value.node.ANode;
+import org.basex.query.value.type.NodeType;
 import org.basex.api.dom.BXNode;
 import org.basex.api.dom.BXElem;
 
@@ -880,30 +883,109 @@ public class QueryGenerator implements java.io.Serializable{
         }
 		return tempMap;
 	}
-	//protected boolean isGlobal;
+	public void defaultAddToDataTree(ANode currNode, ListIterator<QueryRow> parentPath, boolean isGlobal) throws Exception {
+        QueryRow currRow = null;
+        if(parentPath.hasNext()) {
+            currRow = parentPath.next();
+            if(currRow.id.is(currNode)) {
+                // The rest of this path is the same as the last node proccessed.
+                return;
+            } else {
+                currRow = new QueryRow(currNode);
+                parentPath.set(currRow);
+            }
+        } else {
+            currRow = new QueryRow(currNode);
+            parentPath.add(currRow);
+        }
+        BXNode currDOM = BXNode.get(currNode);
+
+		// cache node properties since these may need to go back to the database which could
+		// be expensive
+		String nodeName = currDOM.getNodeName();
+		// run functions can not utilize an attribute map cache since they rely on getNodeHandle
+		// which is not available in those kinds of queries
+		Map<String, String> attrMap = !isRunFunction ? XMLDB.getAttrMapWithCache(currDOM) : XMLDB.getAttrMap(currDOM);
+
+		// set the type as the node name if it does not have a type attribute
+		String type = attrMap.get("type");
+		if(type == null) {
+			type = nodeName;
+		}
+
+		// try to find the axis values at the current node
+		boolean setNodeLevel = false;
+		boolean setYearLevel = false;
+		if(nodeLevel.getKey().equals(type) || nodeLevel.getKey().equals(nodeName)) {
+			setNodeLevel = true;
+            currRow.key = axis1Name;
+            if(!showAttrMap.containsKey(type)) {
+                currRow.value = attrMap.get(nodeLevel.getValue() != null ? nodeLevel.getValue() : "name");
+            } else {
+                currRow.value = XMLDB.getAllAttr(attrMap, showAttrMap.get(type));
+            }
+		} 
+		if(yearLevel.getKey().equals(type) || yearLevel.getKey().equals(nodeName)) {
+			setYearLevel = true;
+            if(setNodeLevel) {
+                currRow = new QueryRow(currNode);
+                if(parentPath.hasNext()) {
+                    parentPath.next();
+                    parentPath.set(currRow);
+                } else {
+                    parentPath.add(currRow);
+                }
+            }
+            currRow.key = axis2Name;
+			currRow.value = attrMap.get(yearLevel.getValue() != null ? yearLevel.getValue() : "year");
+		}
+		// if we should not collapse this node then pick out the attributes which
+		// define how to differentiate this node path
+		// we want to collapse if:
+		// 	- This node is either the node level or year level
+		// 	- This is the region level node and isGlobal is set
+		// 	- The collapse list contains this level
+		// 	- This node has no attributes (since it would not differentiate itself)
+		// TODO: checking if the map is empty alone does not seem correct since getAllAttr
+		//       ignores some attributes
+		if(!setNodeLevel && !setYearLevel && !(isGlobal && type.equals("region")) &&
+				!attrMap.isEmpty() && !getCollapseOnList().contains(type)) {
+			String attr = XMLDB.getAllAttr(attrMap, showAttrMap.get(type));
+			// check for rewrites
+			if(labelRewriteMap != null && labelRewriteMap.containsKey(type)) {
+				Map<String, String> currRewriteMap = labelRewriteMap.get(type);
+				if(currRewriteMap.containsKey(attr)) {
+					attr = currRewriteMap.get(attr);
+				}
+			}
+            currRow.key = type;
+            currRow.value = attr;
+        }
+        ANode parentNode = currNode.parent();
+		if(parentNode.nodeType() != NodeType.DOC) {
+            // recursively process parents first
+            defaultAddToDataTree(parentNode, parentPath, isGlobal);
+        }
+	}
 	protected String defaultCompleteXPath(Object[] regions) {
 		boolean added = false;
 		StringBuffer ret = new StringBuffer();
-		if(((String)regions[0]).equals("Global")) {
+		if(regions.length == 0 || regions[0].equals("Global")) {
 			ret.append("region/");
-			//regionSel = new int[0]; 
-			regions = new Object[0];
-			//isGlobal = true;
-		} else {
-			//isGlobal = false;
-		}
-		for(int i = 0; i < regions.length; ++i) {
-			if(!added) {
-				ret.append("region[ ");
-				added = true;
-			} else {
-				ret.append(" or ");
-			}
-			ret.append("(@name='").append(regions[i]).append("')");
-		}
-		if(added) {
-			ret.append(" ]/");
-		}
+        } else {
+            for(int i = 0; i < regions.length; ++i) {
+                if(!added) {
+                    ret.append("region[ ");
+                    added = true;
+                } else {
+                    ret.append(" or ");
+                }
+                ret.append("(@name='").append(regions[i]).append("')");
+            }
+            if(added) {
+                ret.append(" ]/");
+            }
+        }
 		return ret.append(xPath).toString();
 	}
 	public boolean editDialog(final MiUndoableEditListener listener) {

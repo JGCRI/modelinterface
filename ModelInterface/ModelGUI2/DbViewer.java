@@ -440,7 +440,7 @@ public class DbViewer implements ActionListener, MenuAdder, BatchRunner {
 		parentFrame.setTitle("["+dbFile+"] - ModelInterface");
 	}
 
-	private Vector<ScenarioListItem> getScenarios() {
+	public static Vector<ScenarioListItem> getScenarios() {
 		Vector<ScenarioListItem> ret = new Vector<ScenarioListItem>();
         QueryProcessor queryProc = XMLDB.getInstance().createQuery("/scenario", null, null, null);
 		try {

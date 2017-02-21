@@ -149,7 +149,7 @@ public class XMLDB {
         // BaseX is particular about valid container names and will change them without warning
         // so we check explicitly.
         String containerNameUnmodified = dbLocationFile.getName();
-        contName = IO.get( containerNameUnmodified ).dbname();
+        contName = IO.get( containerNameUnmodified ).dbName();
         if( !containerNameUnmodified.equals( contName ) ) {
             System.out.println( "WARNING: "+containerNameUnmodified+" contains invalid characters, it has been changed to: "+contName );
             System.out.println( "WARNING: container name '"+containerNameUnmodified+
