@@ -887,7 +887,7 @@ public class QueryGenerator implements java.io.Serializable{
         QueryRow currRow = null;
         if(parentPath.hasNext()) {
             currRow = parentPath.next();
-            if(currRow.id.is(currNode)) {
+            if(currRow.id != null && currRow.id.is(currNode)) {
                 // The rest of this path is the same as the last node proccessed.
                 return;
             } else {

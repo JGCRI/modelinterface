@@ -64,6 +64,7 @@ public class RunMIQuery extends QueryModule {
         // We need to put any logging on STDERR so we can assume anything on STDOUT is results
         PrintStream stdout = System.out;
         System.setOut(System.err);
+        XMLDB xmldb = null;
         try {
             String[] scenarioNames = null;
             String[] regions = null;
@@ -84,9 +85,9 @@ public class RunMIQuery extends QueryModule {
                 throw new Exception("Regions argument of unexpected type: "+aRegionNames.toString());
             }
             QueryGenerator qg = new QueryGenerator(aMIQury.toJava());
-            XMLDB.openDatabase(queryContext.context);
+            xmldb = new XMLDB(queryContext.context);
             String currScen = scenarioNames[0];
-            Vector<ScenarioListItem> scenarios = DbViewer.getScenarios();
+            Vector<ScenarioListItem> scenarios = DbViewer.getScenarios(xmldb);
             ScenarioListItem[] found = null;
             for(ListIterator<ScenarioListItem> scenarioIt = scenarios.listIterator(scenarios.size()); scenarioIt.hasPrevious() && found == null; ) {
                 ScenarioListItem scenarioItem = scenarioIt.previous();
@@ -95,7 +96,7 @@ public class RunMIQuery extends QueryModule {
                     // TODO: warn about duplicates?
                 }
             }
-            QueryProcessor queryProc = XMLDB.getInstance().createQuery(qg, found, regions);
+            QueryProcessor queryProc = xmldb.createQuery(qg, found, regions);
             ValueBuilder vb = new ValueBuilder();
             FElem elem = new FElem("csv");
             vb.add(elem);
@@ -106,7 +107,9 @@ public class RunMIQuery extends QueryModule {
             e.printStackTrace();
             throw new QueryException(e);
         } finally {
-            XMLDB.closeDatabase();
+            if(xmldb != null) {
+                xmldb.closeDatabase();
+            }
             // reset STDOUT
             System.setOut(stdout);
         }

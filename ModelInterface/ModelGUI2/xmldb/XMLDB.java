@@ -155,7 +155,7 @@ public class XMLDB {
         wasContextAdopted = false;
 		openDB(db);
     }
-	private XMLDB(Context contextIn) throws Exception {
+	public XMLDB(Context contextIn) throws Exception {
         wasContextAdopted = true;
         context = contextIn;
 	}

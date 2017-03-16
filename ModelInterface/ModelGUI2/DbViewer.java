@@ -441,8 +441,11 @@ public class DbViewer implements ActionListener, MenuAdder, BatchRunner {
 	}
 
 	public static Vector<ScenarioListItem> getScenarios() {
+        return getScenarios(XMLDB.getInstance());
+    }
+	public static Vector<ScenarioListItem> getScenarios(XMLDB xmldb) {
 		Vector<ScenarioListItem> ret = new Vector<ScenarioListItem>();
-        QueryProcessor queryProc = XMLDB.getInstance().createQuery("/scenario", null, null, null);
+        QueryProcessor queryProc = xmldb.createQuery("/scenario", null, null, null);
 		try {
             Iter res = queryProc.iter();
             ANode temp;
@@ -451,7 +454,7 @@ public class DbViewer implements ActionListener, MenuAdder, BatchRunner {
                 BXDoc doc = new BXDoc(temp.parent());
                 String docName = "";
                 try {
-                    URI baseURI = new URI(tempNode.getBaseURI()+"/"+XMLDB.getInstance().getContainer());
+                    URI baseURI = new URI(tempNode.getBaseURI()+"/"+xmldb.getContainer());
                     URI fullDocURI = new URI(doc.getDocumentURI());
                     docName = baseURI.relativize(fullDocURI).getPath();
                 } catch(Exception e) {
