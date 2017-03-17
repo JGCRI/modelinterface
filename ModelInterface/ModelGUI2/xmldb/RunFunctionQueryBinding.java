@@ -63,6 +63,8 @@ public class RunFunctionQueryBinding implements QueryBinding {
 		ret = ret.replace("(:regions:)", regionListBuilder.toString());
 		//ret = ret.replace("(:collection:)", "'"+collection+"'");
 		ret = ret.replace("(:collection:)", "()");
+        // TODO: total hack
+        ret = ret.replace("collection as xs:string)", "collection as xs:string*)");
 		return ret;
 	}
 }

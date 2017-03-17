@@ -57,7 +57,7 @@ import ModelInterface.ModelGUI2.ScenarioListItem;
  * @author Pralit Patel.
  */ 
 public class RunMIQuery extends QueryModule {
-    @Requires(Permission.NONE)
+    @Requires(Permission.READ)
     @Deterministic
     @ContextDependent
     public Value runMIQuery(ANode aMIQury, Value aScnNames, Value aRegionNames) throws QueryException {
@@ -68,7 +68,9 @@ public class RunMIQuery extends QueryModule {
         try {
             String[] scenarioNames = null;
             String[] regions = null;
-            if(aScnNames instanceof Str) {
+            if(aScnNames instanceof Empty) {
+                scenarioNames = new String[0];
+            } else if(aScnNames instanceof Str) {
                 scenarioNames = new String[] { ((Str)aScnNames).toJava() };
             } else if(aScnNames instanceof StrSeq) {
                 scenarioNames = ((StrSeq)aScnNames).toJava();
@@ -86,17 +88,25 @@ public class RunMIQuery extends QueryModule {
             }
             QueryGenerator qg = new QueryGenerator(aMIQury.toJava());
             xmldb = new XMLDB(queryContext.context);
-            String currScen = scenarioNames[0];
-            Vector<ScenarioListItem> scenarios = DbViewer.getScenarios(xmldb);
-            ScenarioListItem[] found = null;
-            for(ListIterator<ScenarioListItem> scenarioIt = scenarios.listIterator(scenarios.size()); scenarioIt.hasPrevious() && found == null; ) {
-                ScenarioListItem scenarioItem = scenarioIt.previous();
-                if(currScen.equals(scenarioItem.getScnName())) {
-                    found = new ScenarioListItem[] { scenarioItem };
-                    // TODO: warn about duplicates?
+            Vector<ScenarioListItem> scenariosInDb = DbViewer.getScenarios(xmldb);
+            Vector<ScenarioListItem> scenariosToRun = new Vector<ScenarioListItem>();
+            if(scenarioNames.length == 0 && !scenariosInDb.isEmpty()) {
+                scenariosToRun.add(scenariosInDb.lastElement());
+            } else {
+                for(String currScn : scenarioNames) {
+                    String[] scnSplit = currScn.split(" (?=[^ ]+$)");
+                    String scnName = scnSplit.length > 0 ? scnSplit[0] : null;
+                    String scnDate = scnSplit.length > 1 ? scnSplit[1] : null;
+                    ScenarioListItem found = ScenarioListItem.findClosestScenario(scenariosInDb, scnName, scnDate);
+                    if(found != null) {
+                        scenariosToRun.add(found);
+                    }
                 }
             }
-            QueryProcessor queryProc = xmldb.createQuery(qg, found, regions);
+            if(scenariosToRun.isEmpty()) {
+                throw new Exception("Could not find scenarios to run.");
+            }
+            QueryProcessor queryProc = xmldb.createQuery(qg, scenariosToRun.toArray(), regions);
             ValueBuilder vb = new ValueBuilder();
             FElem elem = new FElem("csv");
             vb.add(elem);

@@ -42,6 +42,7 @@ import ModelInterface.ModelGUI2.queries.QueryGenerator;
 import ModelInterface.ModelGUI2.queries.SingleQueryExtension;
 import ModelInterface.ModelGUI2.xmldb.XMLDB;
 import ModelInterface.ModelGUI2.xmldb.QueryBinding;
+import ModelInterface.common.DataPair;
 import ModelInterface.common.FileChooser;
 import ModelInterface.common.FileChooserFactory;
 import ModelInterface.common.RecentFilesList.RecentFile;
@@ -1805,7 +1806,7 @@ public class DbViewer implements ActionListener, MenuAdder, BatchRunner {
                 Node queriesNode = null;
 				File outFile = null;
 				String dbFile = null;
-				List<String> scenariosNames = new ArrayList<String>();
+				List<DataPair<String, String> > scenariosNames = new ArrayList<DataPair<String, String> >();
 				boolean singleSheet = Boolean.parseBoolean(prop.getProperty(singleSheetCheckBoxPropName, "false"));
 				boolean includeCharts = Boolean.parseBoolean(prop.getProperty(includeChartsPropName, "true"));
 				boolean splitRuns = Boolean.parseBoolean(prop.getProperty(splitRunsPropName, "false"));
@@ -1827,7 +1828,8 @@ public class DbViewer implements ActionListener, MenuAdder, BatchRunner {
 					} else if(fileNode.getNodeName().equals("xmldbLocation")) {
                         dbFile = fileNode.getTextContent();
 					} else if(fileNode.getNodeName().equals("scenario")) {
-                        scenariosNames.add(((Element)fileNode).getAttribute("name"));
+                        scenariosNames.add(new DataPair<String, String>(((Element)fileNode).getAttribute("name"),((Element)fileNode).getAttribute("date")));
+                                
                     } else if(fileNode.getNodeName().equals(singleSheetCheckBoxPropName)) {
                         singleSheet = Boolean.parseBoolean(fileNode.getFirstChild().getNodeValue());
                     } else if(fileNode.getNodeName().equals(includeChartsPropName)) {
@@ -1861,16 +1863,10 @@ public class DbViewer implements ActionListener, MenuAdder, BatchRunner {
                     if(scenariosNames.isEmpty() && !scenariosInDb.isEmpty()) {
                         scenariosToRun.add(scenariosInDb.lastElement());
                     } else {
-                        for(Iterator<String> nameIt = scenariosNames.iterator(); nameIt.hasNext(); ) {
-                            String name = nameIt.next();
-                            boolean found = false;
-                            for(ListIterator<ScenarioListItem> scenarioIt = scenariosInDb.listIterator(scenariosInDb.size()); scenarioIt.hasPrevious() && !found; ) {
-                                ScenarioListItem scenarioItem = scenarioIt.previous();
-                                if(name.equals(scenarioItem.getScnName())) {
-                                    scenariosToRun.add(scenarioItem);
-                                    found = true;
-                                    // TODO: warn about duplicates?
-                                }
+                        for(DataPair<String, String> currScn : scenariosNames) {
+                            ScenarioListItem found = ScenarioListItem.findClosestScenario(scenariosInDb, currScn.getKey(), currScn.getValue());
+                            if(found != null) {
+                                scenariosToRun.add(found);
                             }
                         }
                     }

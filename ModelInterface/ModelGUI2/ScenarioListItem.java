@@ -29,6 +29,8 @@
 */
 package ModelInterface.ModelGUI2;
 
+import java.util.Vector;
+
 /**
  * Simple immutabe class that holds a scenario name, date, and docName for a
  * sceanario in a XML database.  These are used as the values in the 
@@ -96,4 +98,37 @@ public class ScenarioListItem {
 	public String getScnDate() {
 		return scnDate;
 	}
+
+    /**
+     * Find the best match of a scenario name in a list of ScenarioListItem.
+     * It is a straight forward search if a user provides both a scenario name
+     * and date however often times users just provide the name.  In this case
+     * the "best" match is the last scenario in the list of matching name.  In
+     * the case that neither name or date are provided then the last scenario
+     * in the list is given.
+     * @param scnList The vector of ScenarioListItem to search.
+     * @param scnName A scenario name to find (can be null).
+     * @param scnDate A scenario date to search for (can be null).
+     * @return The closest ScenarioListItem that matches.
+     */
+    static public ScenarioListItem findClosestScenario(final Vector<ScenarioListItem> scnList, String scnName, String scnDate) {
+        if(scnName == null) {
+            return scnList.lastElement();
+        }
+        ScenarioListItem ret = null;
+        for(ScenarioListItem currItem : scnList) {
+            if(scnDate != null) {
+                // must match both name and date
+                if(currItem.getScnName().equals(scnName) && currItem.getScnDate().equals(scnDate)) {
+                    ret = currItem;
+                }
+            } else {
+                // only needs to match name since no date was provided
+                if(currItem.getScnName().equals(scnName)) {
+                    ret = currItem;
+                }
+            }
+        }
+        return ret;
+    }
 }
