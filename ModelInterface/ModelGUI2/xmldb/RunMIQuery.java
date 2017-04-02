@@ -30,6 +30,7 @@
 package ModelInterface.ModelGUI2.xmldb;
 
 import java.io.PrintStream;
+import java.io.OutputStream;
 import java.util.Vector;
 import java.util.LinkedList;
 import java.util.ListIterator;
@@ -63,6 +64,16 @@ public class RunMIQuery extends QueryModule {
     public Value runMIQuery(ANode aMIQury, Value aScnNames, Value aRegionNames) throws QueryException {
         // We need to put any logging on STDERR so we can assume anything on STDOUT is results
         PrintStream stdout = System.out;
+        PrintStream stderr = System.err;
+        // If a user wants to suppress all output we must redirect STDERR as well
+        if(Boolean.parseBoolean(System.getProperty("ModelInterface.SUPPRESS_OUTPUT", "false"))) {
+            System.setErr(new PrintStream(new OutputStream() {
+                @Override
+                public void write(int b) {
+                    // ignore all
+                }
+            }));
+        }
         System.setOut(System.err);
         XMLDB xmldb = null;
         try {
@@ -120,8 +131,9 @@ public class RunMIQuery extends QueryModule {
             if(xmldb != null) {
                 xmldb.closeDatabase();
             }
-            // reset STDOUT
+            // reset output streams
             System.setOut(stdout);
+            System.setErr(stderr);
         }
     }
     private void buildTable(QueryProcessor queryProc, QueryGenerator qg, FElem outputDoc) throws Exception {
