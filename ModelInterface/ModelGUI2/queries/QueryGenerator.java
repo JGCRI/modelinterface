@@ -963,8 +963,21 @@ public class QueryGenerator implements java.io.Serializable{
         }
         ANode parentNode = currNode.parent();
 		if(parentNode.nodeType() != NodeType.DOC) {
-            // recursively process parents first
+            // recursively process parents
             defaultAddToDataTree(parentNode, parentPath, isGlobal);
+        } else {
+            // We are at the top of the nesting and the stop point for recursion
+            // Generally there is nothing more to do however we need to correct
+            // for the special case there the distance from a query result to the
+            // top changes (the length of parentPath is changing).  We need to ensure
+            // there are no more items left on the list (except for Units).  This
+            // situation is not ideal as it defeats out caching strategy.
+            while(parentPath.hasNext()) {
+                QueryRow extraRow = parentPath.next();
+                if(!extraRow.key.equals("Units")) {
+                    parentPath.remove();
+                }
+            }
         }
 	}
 	protected String defaultCompleteXPath(Object[] regions) {
