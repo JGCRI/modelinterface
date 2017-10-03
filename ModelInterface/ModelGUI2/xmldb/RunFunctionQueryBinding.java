@@ -54,11 +54,15 @@ public class RunFunctionQueryBinding implements QueryBinding {
 				.append(currScn.getScnDate()).append("', ");
 		}
 		scenarioListBuilder.delete(scenarioListBuilder.length()-2, scenarioListBuilder.length()).append(")");
-		for(int i = 0; i < regions.length; ++i) {
-			String currRegion = (String)regions[i];
-			regionListBuilder.append("'").append(currRegion).append("', ");
-		}
-		regionListBuilder.delete(regionListBuilder.length()-2, regionListBuilder.length()).append(")");
+        if(regions.length == 0) {
+            regionListBuilder.append("'Global')");
+        } else {
+            for(int i = 0; i < regions.length; ++i) {
+                String currRegion = (String)regions[i];
+                regionListBuilder.append("'").append(currRegion).append("', ");
+            }
+            regionListBuilder.delete(regionListBuilder.length()-2, regionListBuilder.length()).append(")");
+        }
 		String ret = qg.getXPath().replace("(:scenarios:)", scenarioListBuilder.toString());
 		ret = ret.replace("(:regions:)", regionListBuilder.toString());
 		//ret = ret.replace("(:collection:)", "'"+collection+"'");

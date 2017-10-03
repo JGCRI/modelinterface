@@ -974,7 +974,7 @@ public class QueryGenerator implements java.io.Serializable{
             // situation is not ideal as it defeats out caching strategy.
             while(parentPath.hasNext()) {
                 QueryRow extraRow = parentPath.next();
-                if(!extraRow.key.equals("Units")) {
+                if(extraRow.key == null || !extraRow.key.equals("Units")) {
                     parentPath.remove();
                 }
             }
