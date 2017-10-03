@@ -31,8 +31,8 @@ package ModelInterface.ModelGUI2.csvconv;
 
 import java.io.File;
 import java.net.URI;
+import java.io.InputStream;
 import java.io.FileInputStream;
-import java.io.DataInputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.FileWriter;
@@ -76,8 +76,17 @@ public class CSVToXMLMain {
                 File xmlOutputFile = new File(args[args.length - 1]);
                 File headerFile = new File(args[args.length - 2]);
                 File[] csvFiles = new File[args.length - 2];
+                boolean foundSTDINFlag = false;
                 for(int i = 0; i < args.length - 2; ++i) {
-                    csvFiles[i] = new File(args[i]);
+                    if(args[i].equals("-")) {
+                        if(foundSTDINFlag) {
+                            throw new Exception("STDIN input flag has already been set.");
+                        } else {
+                            csvFiles[i] = null;
+                        }
+                    } else {
+                        csvFiles[i] = new File(args[i]);
+                    }
                 }
                 Document doc = runCSVConversion(csvFiles, headerFile, null);
                 writeFile(xmlOutputFile, doc);
@@ -124,9 +133,8 @@ public class CSVToXMLMain {
         try {
 
             FileInputStream hashfis = new FileInputStream(headerFile);
-            DataInputStream hashfin = new DataInputStream(hashfis);
             BufferedReader hashInput = new BufferedReader(
-                    new InputStreamReader(hashfin));
+                    new InputStreamReader(hashfis));
             hashInput.readLine(); // ignores first line of file
             inputLine = hashInput.readLine().trim();
             while (inputLine != null && inputLine.length() > 0 && inputLine.charAt(0) == '$') { // read in
@@ -208,10 +216,11 @@ public class CSVToXMLMain {
             // tableIDMap should now be all set up ...
 
             for(int j = 0; j < csvFiles.length; ++j) {
-                FileInputStream fis = new FileInputStream(csvFiles[j]);
-                DataInputStream fin = new DataInputStream(fis);
+                InputStream fis = csvFiles[j] != null ?
+                    new FileInputStream(csvFiles[j]) :
+                    System.in;
                 BufferedReader stdInput = new BufferedReader(new InputStreamReader(
-                            fin));
+                            fis));
 
                 inputLine = stdInput.readLine().trim(); // read one line of input
 
@@ -263,8 +272,7 @@ public class CSVToXMLMain {
                         inputLine.trim();
                     }
                 }
-                fin.close();
-                hashfin.close();
+                fis.close();
             }
 
             return tree.getDoc();
@@ -273,11 +281,11 @@ public class CSVToXMLMain {
         } catch (Exception e) {
             System.out.println("intValueStr "+intValueStr);
             System.out
-                .println("Excpetion thrown while trying to read csv and header files");
+                .println("Exception thrown while trying to read csv and header files: "+e);
             e.printStackTrace();
             if(parentFrame != null) {
                 JOptionPane.showMessageDialog(parentFrame,
-                        "Excpetion thrown while trying to read csv and header files\n"
+                        "Exception thrown while trying to read csv and header files\n"
                         + e, "Exception", JOptionPane.ERROR_MESSAGE);
             }
             return null;
