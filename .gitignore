@@ -1,2 +1,6 @@
 *.class
 jars
+*.jar
+model_interface.properties
+gcamdata-build/
+rgcam-build/
