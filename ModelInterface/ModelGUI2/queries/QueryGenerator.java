@@ -702,7 +702,7 @@ public class QueryGenerator implements java.io.Serializable{
 		} else {
 			temp.setAttribute("buildList", "false");
 		}
-		temp.appendChild(doc.createTextNode(xPath));
+		temp.appendChild(!isRunFunction ? doc.createTextNode(xPath) : doc.createCDATASection(xPath));
 		queryNode.appendChild(temp);
 		temp = doc.createElement("comments");
 		temp.appendChild(doc.createTextNode(comments));
