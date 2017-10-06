@@ -924,6 +924,12 @@ public class QueryGenerator implements java.io.Serializable{
             } else {
                 currRow.value = XMLDB.getAllAttr(attrMap, showAttrMap.get(type));
             }
+			if(labelRewriteMap != null && labelRewriteMap.containsKey(type)) {
+				Map<String, String> currRewriteMap = labelRewriteMap.get(type);
+				if(currRewriteMap.containsKey(currRow.value)) {
+					currRow.value = currRewriteMap.get(currRow.value);
+				}
+			}
 		} 
 		if(yearLevel.getKey().equals(type) || yearLevel.getKey().equals(nodeName)) {
 			setYearLevel = true;

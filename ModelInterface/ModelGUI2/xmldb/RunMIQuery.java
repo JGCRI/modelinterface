@@ -158,18 +158,25 @@ public class RunMIQuery extends QueryModule {
             parentPath.peekLast().value = XMLDB.getAttrMap(BXNode.get(tempNode.parent())).get("unit");
 
             FElem row = new FElem("record");
+            boolean skip = false;
             for(Iterator<QueryRow> it = parentPath.descendingIterator(); it.hasNext(); ) {
                 QueryRow currRow = it.next();
                 if(!(currRow.key == null && currRow.value == null )) {
                     FElem col = new FElem(currRow.key);
                     col.add(currRow.value);
                     row.add(col);
+                    // skip this data since a rewrite list set the value
+                    // to an empty string indicating the user wanted to
+                    // delete it
+                    skip = skip || currRow.value.equals("");
                 }
             }
-            FElem valueCol = new FElem("value");
-            valueCol.add(domNode.getNodeValue());
-            row.add(valueCol);
-            outputDoc.add(row);
+            if(!skip) {
+                FElem valueCol = new FElem("value");
+                valueCol.add(domNode.getNodeValue());
+                row.add(valueCol);
+                outputDoc.add(row);
+            }
         }
         System.out.println("After Function: "+System.currentTimeMillis());
     }
