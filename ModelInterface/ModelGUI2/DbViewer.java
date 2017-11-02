@@ -455,9 +455,7 @@ public class DbViewer implements ActionListener, MenuAdder, BatchRunner {
                 BXDoc doc = new BXDoc(temp.parent());
                 String docName = "";
                 try {
-                    URI baseURI = new URI(tempNode.getBaseURI()+"/"+xmldb.getContainer());
-                    URI fullDocURI = new URI(doc.getDocumentURI());
-                    docName = baseURI.relativize(fullDocURI).getPath();
+                    docName = new File(new URI(doc.getDocumentURI())).getName();
                 } catch(Exception e) {
                     e.printStackTrace();
                 }
