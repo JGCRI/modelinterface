@@ -231,7 +231,7 @@ public class DbViewer implements ActionListener, MenuAdder, BatchRunner {
                                 queryFile = new File(queryFileName);
                             } else {
                                 queryFile = xmlFiles[0];
-                                queryFileName = queryFile.getName();
+                                queryFileName = queryFile.getAbsolutePath();
                             }
                             prop.setProperty("queryFile", queryFileName);
                         }
