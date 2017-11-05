@@ -216,11 +216,26 @@ public class DbViewer implements ActionListener, MenuAdder, BatchRunner {
 						XMLDB.closeDatabase();
 					}
 					if(evt.getNewValue().equals(controlStr)) {
-						String queryFileName;
 						Properties prop = main.getProperties();
-						// I should probably stop being lazy
-						prop.setProperty("queryFile", queryFileName = 
-							prop.getProperty("queryFile", "standard_queries.xml"));
+						String queryFileName = prop.getProperty("queryFile", null);
+                        File queryFile = queryFileName != null ? new File(queryFileName) : null;
+                        if(queryFile == null || !queryFile.exists()) {
+                            FileChooser fc = FileChooserFactory.getFileChooser();
+                            final FileFilter xmlFilter = new XMLFilter();
+                            File[] xmlFiles = fc.doFilePrompt(parentFrame, "Could not find query file.  Please select one.", FileChooser.LOAD_DIALOG,
+                                new File(main.getProperties().getProperty("lastDirectory", ".")),
+                                xmlFilter);
+                            if(xmlFiles == null && xmlFiles.length > 0) {
+                                // user hit cancel just create a new query file
+                                queryFileName = "Main_queries.xml";
+                                queryFile = new File(queryFileName);
+                            } else {
+                                queryFile = xmlFiles[0];
+                                queryFileName = queryFile.getName();
+                            }
+                            prop.setProperty("queryFile", queryFileName);
+                        }
+
 						// TODO: move to load preferences
 						scenarioRegionSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true);
 						scenarioRegionSplit.setResizeWeight(.5);
@@ -245,7 +260,7 @@ public class DbViewer implements ActionListener, MenuAdder, BatchRunner {
 						main.getSaveMenu().addActionListener(thisViewer);
 						main.getSaveAsMenu().addActionListener(thisViewer);
 						main.getSaveAsMenu().setEnabled(true);
-						queriesDoc = readQueries(new File(queryFileName));
+						queriesDoc = readQueries(queryFile);
 					}
 				}
 			}
