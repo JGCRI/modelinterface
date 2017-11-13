@@ -1877,7 +1877,12 @@ public class DbViewer implements ActionListener, MenuAdder, BatchRunner {
                         scenariosToRun.add(scenariosInDb.lastElement());
                     } else {
                         for(DataPair<String, String> currScn : scenariosNames) {
-                            ScenarioListItem found = ScenarioListItem.findClosestScenario(scenariosInDb, currScn.getKey(), currScn.getValue());
+                            String scen = currScn.getKey();
+                            String date = currScn.getValue();
+                            if ( date == "" ) {
+                                date = null;        // null date results in match; "" does not
+                            }
+                            ScenarioListItem found = ScenarioListItem.findClosestScenario(scenariosInDb, scen, date);
                             if(found != null) {
                                 scenariosToRun.add(found);
                             }
