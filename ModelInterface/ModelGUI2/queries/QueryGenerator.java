@@ -957,15 +957,19 @@ public class QueryGenerator implements java.io.Serializable{
 		if(!setNodeLevel && !setYearLevel && !(isGlobal && type.equals("region")) &&
 				!attrMap.isEmpty() && !getCollapseOnList().contains(type)) {
 			String attr = XMLDB.getAllAttr(attrMap, showAttrMap.get(type));
-			// check for rewrites
-			if(labelRewriteMap != null && labelRewriteMap.containsKey(type)) {
-				Map<String, String> currRewriteMap = labelRewriteMap.get(type);
-				if(currRewriteMap.containsKey(attr)) {
-					attr = currRewriteMap.get(attr);
-				}
-			}
-            currRow.key = type;
-            currRow.value = attr;
+            // double check the case that we have attributes but not any that we categorize
+            // by (i.e. getAllAttr drops such as units)
+            if(attr != "") {
+                // check for rewrites
+                if(labelRewriteMap != null && labelRewriteMap.containsKey(type)) {
+                    Map<String, String> currRewriteMap = labelRewriteMap.get(type);
+                    if(currRewriteMap.containsKey(attr)) {
+                        attr = currRewriteMap.get(attr);
+                    }
+                }
+                currRow.key = type;
+                currRow.value = attr;
+            }
         }
         ANode parentNode = currNode.parent();
 		if(parentNode.nodeType() != NodeType.DOC) {
