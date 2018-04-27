@@ -43,9 +43,11 @@ import org.basex.query.*;
 import org.basex.query.iter.Iter;
 import org.basex.query.value.*;
 import org.basex.query.value.item.*;
+import org.basex.query.value.array.Array;
 import org.basex.query.value.seq.StrSeq;
 import org.basex.query.value.seq.Empty;
 import org.basex.query.value.node.*;
+import org.basex.query.value.map.Map;
 import org.basex.api.dom.BXNode;
 import org.basex.util.list.StringList;
 
@@ -118,12 +120,7 @@ public class RunMIQuery extends QueryModule {
                 throw new Exception("Could not find scenarios to run.");
             }
             QueryProcessor queryProc = xmldb.createQuery(qg, scenariosToRun.toArray(), regions);
-            ValueBuilder vb = new ValueBuilder();
-            FElem elem = new FElem("csv");
-            vb.add(elem);
-            buildTable(queryProc, qg, elem);
-            return vb.value();
-            //return res.value();
+            return buildTable(queryProc, qg);
         } catch(Exception e) {
             e.printStackTrace();
             throw new QueryException(e);
@@ -136,16 +133,21 @@ public class RunMIQuery extends QueryModule {
             System.setErr(stderr);
         }
     }
-    private void buildTable(QueryProcessor queryProc, QueryGenerator qg, FElem outputDoc) throws Exception {
+    private Map buildTable(QueryProcessor queryProc, QueryGenerator qg) throws Exception {
         System.out.println("In Function: "+System.currentTimeMillis());
         // TODO: replicate these checks, currently just assuming they are all false
         boolean sumAll = false;
         boolean isTotal = false;
         boolean isGlobal = false;
 
+        Map output = Map.EMPTY;
+        ValueBuilder records = new ValueBuilder(queryContext);
         Iter res = queryProc.iter();
         ANode tempNode;
         final LinkedList<QueryRow>parentPath = new LinkedList<QueryRow>();
+        LinkedList<Value> header = new LinkedList();
+        Value[] row = null;
+        boolean isFirstRow = true;
         while((tempNode = (ANode)res.next()) != null) {
             BXNode domNode = BXNode.get(tempNode);
             qg.defaultAddToDataTree(tempNode.parent(), parentPath.listIterator(0), isGlobal);
@@ -157,14 +159,24 @@ public class RunMIQuery extends QueryModule {
             }
             parentPath.peekLast().value = XMLDB.getAttrMap(BXNode.get(tempNode.parent())).get("unit");
 
-            FElem row = new FElem("record");
+            if(isFirstRow) {
+                for(Iterator<QueryRow> it = parentPath.descendingIterator(); it.hasNext(); ) {
+                    QueryRow currRow = it.next();
+                    if(!(currRow.key == null && currRow.value == null )) {
+                        header.add(Str.get(currRow.key));
+                    }
+                }
+                header.add(Str.get("value"));
+                row = new Value[header.size()];
+                isFirstRow = false;
+            }
+
             boolean skip = false;
+            int colIndex = 0;
             for(Iterator<QueryRow> it = parentPath.descendingIterator(); it.hasNext(); ) {
                 QueryRow currRow = it.next();
                 if(!(currRow.key == null && currRow.value == null )) {
-                    FElem col = new FElem(currRow.key);
-                    col.add(currRow.value);
-                    row.add(col);
+                    row[colIndex++] = Str.get(currRow.value);
                     // skip this data since a rewrite list set the value
                     // to an empty string indicating the user wanted to
                     // delete it
@@ -172,12 +184,19 @@ public class RunMIQuery extends QueryModule {
                 }
             }
             if(!skip) {
-                FElem valueCol = new FElem("value");
-                valueCol.add(domNode.getNodeValue());
-                row.add(valueCol);
-                outputDoc.add(row);
+                row[colIndex] = Str.get(domNode.getNodeValue());
+                records.add(Array.from(row));
             }
         }
+        // the xquery wants the header as an array under the "names" key
+        output = output.put(Str.get("names"),
+                Array.from(header.toArray(new Value[0])),
+                queryContext.root.info);
+        // and it wants the data as a sequence of arrays under the "records" key
+        output = output.put(Str.get("records"),
+                records.value(),
+                queryContext.root.info);
         System.out.println("After Function: "+System.currentTimeMillis());
+        return output;
     }
 }
