@@ -48,8 +48,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Element;
-import com.sun.org.apache.xml.internal.serialize.OutputFormat;
-import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
+import org.w3c.dom.bootstrap.DOMImplementationRegistry;
+import org.w3c.dom.DOMConfiguration;
+import org.w3c.dom.ls.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -58,8 +59,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
  * This class serves as both a static utility to to run the conversion as well
  * as a main command line program.  The commandline expects at least three arguments
  * the first of which is one or more CSV files, next the header file and finally
- * where to write the resulting XML file.
- *
+ * where to write the resulting XML file.  *
  * @author Pralit Patel
  */ 
 public class CSVToXMLMain {
@@ -305,30 +305,25 @@ public class CSVToXMLMain {
      * @return whether the file was actually written or not
      */
     public static boolean writeFile(File file, Document theDoc) {
-        // specify output formating properties
-        OutputFormat format = new OutputFormat(theDoc);
-        format.setEncoding("UTF-8");
-        format.setLineSeparator("\r\n");
-        format.setIndenting(true);
-        format.setIndent(3);
-        format.setLineWidth(0);
-        format.setPreserveSpace(false);
-        format.setOmitDocumentType(true);
+		try {
+        DOMImplementationRegistry reg = DOMImplementationRegistry
+			.newInstance();
+        DOMImplementationLS implls = (DOMImplementationLS)reg.getDOMImplementation("XML 3.0");
+        LSSerializer serializer = implls.createLSSerializer();
+		// specify output formating properties
+        DOMConfiguration domConfig = serializer.getDomConfig();
+        boolean prettyPrint = Boolean.parseBoolean(System.getProperty("ModelInterface.pretty-print", "true"));
+        domConfig.setParameter("format-pretty-print", prettyPrint);
 
-        // create the searlizer and have it print the document
+		// create the searlizer and have it print the document
 
-        try {
-            FileWriter fw = new FileWriter(file);
-            XMLSerializer serializer = new XMLSerializer(fw, format);
-            serializer.asDOMSerializer();
-            serializer.serialize(theDoc);
-            fw.close();
-        } catch (java.io.IOException e) {
-            System.err.println("Error outputing tree: " + e);
-            return false;
-        }
-        return true;
-    }
+            serializer.writeToURI(theDoc, file.toURI().toString());
+		} catch (Exception e) {
+			System.err.println("Error outputing tree: " + e);
+			return false;
+		}
+		return true;
+	}
 
     /**
      * Run CSV to XML conversion(s) by reading header, csv, and output filenames from a

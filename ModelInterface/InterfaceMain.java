@@ -253,6 +253,11 @@ public class InterfaceMain implements ActionListener {
 		if(propertiesFile.exists()) {
 			try {
 				savedProperties.loadFromXML(new FileInputStream(propertiesFile));
+                String prettyPrintProperty = savedProperties.getProperty("pretty-print", null);
+                if(System.getProperty("ModelInterface.pretty-print", null) == null && prettyPrintProperty != null) {
+                    System.getProperties().setProperty("ModelInterface.pretty-print", prettyPrintProperty);
+                }
+
 			} catch (FileNotFoundException notFound) {
 				// well I checked if it existed before so..
 			} catch (IOException ioe) {

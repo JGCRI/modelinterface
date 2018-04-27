@@ -89,8 +89,6 @@ import java.awt.Cursor;
 import java.awt.event.MouseAdapter;
 import java.util.*;
 
-import com.sun.org.apache.xml.internal.serialize.OutputFormat;
-import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -102,6 +100,7 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Element;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
+import org.w3c.dom.DOMConfiguration;
 import javax.xml.xpath.XPathFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
@@ -1376,25 +1375,17 @@ public class DbViewer implements ActionListener, MenuAdder, BatchRunner {
 	}
 
 	public boolean writeFile(File file, Document theDoc) {
+        LSSerializer serializer = implls.createLSSerializer();
 		// specify output formating properties
-		OutputFormat format = new OutputFormat(theDoc);
-		format.setEncoding("UTF-8");
-		format.setLineSeparator("\r\n");
-		format.setIndenting(true);
-		format.setIndent(3);
-		format.setLineWidth(0);
-		format.setPreserveSpace(false);
-		format.setOmitDocumentType(true);
+        DOMConfiguration domConfig = serializer.getDomConfig();
+        boolean prettyPrint = Boolean.parseBoolean(System.getProperty("ModelInterface.pretty-print", "true"));
+        domConfig.setParameter("format-pretty-print", prettyPrint);
 
 		// create the searlizer and have it print the document
 
 		try {
-			FileWriter fw = new FileWriter(file);
-			XMLSerializer serializer = new XMLSerializer(fw, format);
-			serializer.asDOMSerializer();
-			serializer.serialize(theDoc);
-			fw.close();
-		} catch (java.io.IOException e) {
+            serializer.writeToURI(theDoc, file.toURI().toString());
+		} catch (LSException e) {
 			System.err.println("Error outputing tree: " + e);
 			return false;
 		}
