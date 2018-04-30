@@ -35,6 +35,7 @@ import java.awt.Container;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStream;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -46,10 +47,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import com.sun.org.apache.xml.internal.serialize.OutputFormat;
-import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
-//import org.w3c.dom.ls.DOMImplementationLS;
-//import org.w3c.dom.ls.LSSerializer;
+import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.ls.DOMImplementationLS;
+import org.w3c.dom.ls.LSSerializer;
 import javax.xml.xpath.XPathFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
@@ -257,43 +257,6 @@ public final class DOMUtils {
 	    }
 
 
-	    if(!aDocument.getDocumentElement().getAttribute("needs-save").equals("true")) {
-		    Logger.global.log(Level.INFO, "Saving an unmodified document. needs-save: " + aDocument.getDocumentElement().getAttribute("needs-save"));
-	    }
-	    aDocument.getDocumentElement().removeAttribute("needs-save"); //$NON-NLS-1$
-
-	    // specify output formating properties
-	    OutputFormat format = new OutputFormat(aDocument);
-	    format.setEncoding("UTF-8");
-	    format.setLineSeparator("\r\n");
-	    format.setIndenting(true);
-	    format.setIndent(3);
-	    format.setLineWidth(0);
-	    format.setPreserveSpace(false);
-	    format.setOmitDocumentType(true);
-
-	    // create the searlizer and have it print the document
-	    try {
-		    final File outputFile = FileUtils.getDocumentFile(aDocument);
-		    assert (outputFile != null);
-		    FileWriter fw = new FileWriter(outputFile);
-		    XMLSerializer serializer = new XMLSerializer(fw, format);
-		    serializer.asDOMSerializer();
-		    serializer.serialize(aDocument);
-		    fw.close();
-	    } catch (java.io.IOException e) {
-		    // Unexpected error creating writing the file. Inform the user
-		    // and log the error.
-		    Logger.global.throwing("DOMUtils", "serialize", e); //$NON-NLS-1$ //$NON-NLS-2$
-		    final String errorMessage = Messages.getString("DOMUtils.22") //$NON-NLS-1$
-			    + e.getMessage() + "."; //$NON-NLS-1$
-		    final String errorTitle = Messages.getString("DOMUtils.24"); //$NON-NLS-1$
-		    JOptionPane.showMessageDialog(aContainer, errorMessage, errorTitle,
-				    JOptionPane.ERROR_MESSAGE);
-		    return false;
-	    }
-
-	    /*
 	    // Create the serializer.
 	    DOMImplementation impl = aDocument.getImplementation();
 	    DOMImplementationLS implLS = (DOMImplementationLS) impl.getFeature("LS","3.0");
@@ -335,7 +298,6 @@ JOptionPane.showMessageDialog(aContainer, errorMessage, errorTitle,
 JOptionPane.ERROR_MESSAGE);
 return false;
 	    }
-	    */
 	    // Add an attribute that signals that the document has been saved
 	    // successfully.
 	    aDocument.getDocumentElement().setAttribute("document-saved", "true");

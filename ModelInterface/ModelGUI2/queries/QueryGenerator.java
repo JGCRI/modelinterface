@@ -705,7 +705,7 @@ public class QueryGenerator implements java.io.Serializable{
 		temp.appendChild(!isRunFunction ? doc.createTextNode(xPath) : doc.createCDATASection(xPath));
 		queryNode.appendChild(temp);
 		temp = doc.createElement("comments");
-		temp.appendChild(doc.createTextNode(comments));
+		temp.appendChild(doc.createTextNode(comments != null ? comments : ""));
 		queryNode.appendChild(temp);
 		if(labelRewriteMap != null) {
 			temp = doc.createElement("labelRewriteList");
