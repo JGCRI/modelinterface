@@ -32,8 +32,6 @@ package ModelInterface.ModelGUI2;
 import org.w3c.dom.*;
 import org.w3c.dom.ls.*;
 import org.w3c.dom.bootstrap.*;
-import com.sun.org.apache.xml.internal.serialize.OutputFormat;
-import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
 import org.jfree.chart.JFreeChart;
 
 import javax.xml.xpath.*;
@@ -1269,25 +1267,17 @@ public class InputViewer implements ActionListener, TableModelListener, MenuAdde
 	 * @return whether the file was actually written or not
 	 */
 	public boolean writeFile(File file, Document theDoc) {
+        LSSerializer serializer = implls.createLSSerializer();
 		// specify output formating properties
-		OutputFormat format = new OutputFormat(theDoc);
-		format.setEncoding("UTF-8");
-		format.setLineSeparator("\r\n");
-		format.setIndenting(true);
-		format.setIndent(3);
-		format.setLineWidth(0);
-		format.setPreserveSpace(false);
-		format.setOmitDocumentType(true);
+        DOMConfiguration domConfig = serializer.getDomConfig();
+        boolean prettyPrint = Boolean.parseBoolean(System.getProperty("ModelInterface.pretty-print", "true"));
+        domConfig.setParameter("format-pretty-print", prettyPrint);
 
 		// create the searlizer and have it print the document
 
 		try {
-			FileWriter fw = new FileWriter(file);
-			XMLSerializer serializer = new XMLSerializer(fw, format);
-			serializer.asDOMSerializer();
-			serializer.serialize(theDoc);
-			fw.close();
-		} catch (java.io.IOException e) {
+            serializer.writeToURI(theDoc, file.toURI().toString());
+		} catch (LSException e) {
 			System.err.println("Error outputing tree: " + e);
 			return false;
 		}
