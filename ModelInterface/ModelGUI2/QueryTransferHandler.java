@@ -33,6 +33,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.Element;
 import org.w3c.dom.DOMException;
+import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.ls.*;
 
 import java.awt.datatransfer.DataFlavor;
@@ -340,7 +341,14 @@ public class QueryTransferHandler extends TransferHandler {
 					}
 				}
 				if(flavor.isFlavorTextType()) {
-					return implls.createLSSerializer().writeToString(toSerialize);
+                    LSSerializer serializer = implls.createLSSerializer();
+                    // specify output formating properties
+                    DOMConfiguration domConfig = serializer.getDomConfig();
+                    boolean prettyPrint = Boolean.parseBoolean(System.getProperty("ModelInterface.pretty-print", "true"));
+                    domConfig.setParameter("format-pretty-print", prettyPrint);
+                    // always skip the XML decleration for copy/paste
+                    domConfig.setParameter("xml-declaration", false);
+					return serializer.writeToString(toSerialize);
 				} else {
 					return toSerialize;
 				}
