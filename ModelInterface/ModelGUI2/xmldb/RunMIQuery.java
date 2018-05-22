@@ -155,7 +155,8 @@ public class RunMIQuery extends QueryModule {
                 parentPath.offerLast(unitsRow);
                 unitsRow.key = "Units";
             }
-            parentPath.peekLast().value = XMLDB.getAttrMap(BXNode.get(tempNode.parent())).get("unit");
+            String currUnits = XMLDB.getAttrMap(BXNode.get(tempNode.parent())).get("unit");
+            parentPath.peekLast().value = currUnits == null ? "None Specified" : currUnits;
 
             FElem row = new FElem("record");
             boolean skip = false;
