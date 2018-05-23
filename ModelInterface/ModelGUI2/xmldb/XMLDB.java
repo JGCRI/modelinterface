@@ -244,10 +244,14 @@ public class XMLDB {
 	 */
 	public boolean exportDoc(final String aDocName, final File aLocation) {
 		try {
-            final int docPre = context.data().resources.doc(aDocName);
+            final int[] docPre = context.data().resources.docs(aDocName).toArray();
+            if(docPre.length != 1) {
+                System.err.println(aDocName+" matched "+docPre.length+" docs; != 1");
+                return false;
+            }
             final PrintOutput out = new PrintOutput(aLocation.getPath());
             final Serializer outputter = Serializer.get(out);
-            outputter.serialize(new DBNode(context.data(), docPre));
+            outputter.serialize(new DBNode(context.data(), docPre[0]));
             outputter.close();
             out.close();
 			return true;
