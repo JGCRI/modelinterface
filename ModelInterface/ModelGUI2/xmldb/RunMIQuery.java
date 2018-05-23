@@ -128,9 +128,9 @@ public class RunMIQuery extends QueryModule {
             e.printStackTrace();
             throw new QueryException(e);
         } finally {
-            if(xmldb != null) {
-                xmldb.closeDatabase();
-            }
+            // note no need to close xmldb since we adopted the context
+            // from the already running BaseX instance
+
             // reset output streams
             System.setOut(stdout);
             System.setErr(stderr);

@@ -1810,6 +1810,7 @@ public class DbViewer implements ActionListener, MenuAdder, BatchRunner {
                 Node queriesNode = null;
 				File outFile = null;
 				String dbFile = null;
+                boolean didOpenDB = false;
 				List<DataPair<String, String> > scenariosNames = new ArrayList<DataPair<String, String> >();
 				boolean singleSheet = Boolean.parseBoolean(prop.getProperty(singleSheetCheckBoxPropName, "false"));
 				boolean includeCharts = Boolean.parseBoolean(prop.getProperty(includeChartsPropName, "true"));
@@ -1860,6 +1861,7 @@ public class DbViewer implements ActionListener, MenuAdder, BatchRunner {
                     // for instance connect to an in memory database.
                     if(XMLDB.getInstance() == null) {
                         XMLDB.openDatabase(dbFile);
+                        didOpenDB = true;
                     }
 
                     Vector<ScenarioListItem> scenariosInDb = getScenarios();
@@ -1929,7 +1931,9 @@ public class DbViewer implements ActionListener, MenuAdder, BatchRunner {
                 } catch(Exception e) {
                     e.printStackTrace();
                 } finally {
-                    XMLDB.closeDatabase();
+                    if(didOpenDB) {
+                        XMLDB.closeDatabase();
+                    }
                 }
 			} else {
 				System.out.println("Unknown command: "+actionCommand);
