@@ -125,9 +125,9 @@ public class RunMIQuery extends QueryModule {
             e.printStackTrace();
             throw new QueryException(e);
         } finally {
-            if(xmldb != null) {
-                xmldb.closeDatabase();
-            }
+            // note no need to close xmldb since we adopted the context
+            // from the already running BaseX instance
+
             // reset output streams
             System.setOut(stdout);
             System.setErr(stderr);
@@ -157,7 +157,8 @@ public class RunMIQuery extends QueryModule {
                 parentPath.offerLast(unitsRow);
                 unitsRow.key = "Units";
             }
-            parentPath.peekLast().value = XMLDB.getAttrMap(BXNode.get(tempNode.parent())).get("unit");
+            String currUnits = XMLDB.getAttrMap(BXNode.get(tempNode.parent())).get("unit");
+            parentPath.peekLast().value = currUnits == null ? "None Specified" : currUnits;
 
             if(isFirstRow) {
                 for(Iterator<QueryRow> it = parentPath.descendingIterator(); it.hasNext(); ) {
