@@ -120,7 +120,8 @@ public class RunMIQuery extends QueryModule {
                 throw new Exception("Could not find scenarios to run.");
             }
             QueryProcessor queryProc = xmldb.createQuery(qg, scenariosToRun.toArray(), regions);
-            return buildTable(queryProc, qg);
+            boolean isGlobal = regions.length > 0 ? regions[0].equals("Global") : false;
+            return buildTable(queryProc, qg, isGlobal);
         } catch(Exception e) {
             e.printStackTrace();
             throw new QueryException(e);
@@ -133,12 +134,11 @@ public class RunMIQuery extends QueryModule {
             System.setErr(stderr);
         }
     }
-    private Map buildTable(QueryProcessor queryProc, QueryGenerator qg) throws Exception {
+    private Map buildTable(QueryProcessor queryProc, QueryGenerator qg, boolean isGlobal) throws Exception {
         System.out.println("In Function: "+System.currentTimeMillis());
         // TODO: replicate these checks, currently just assuming they are all false
         boolean sumAll = false;
         boolean isTotal = false;
-        boolean isGlobal = false;
 
         Map output = Map.EMPTY;
         ValueBuilder records = new ValueBuilder(queryContext);
@@ -150,7 +150,7 @@ public class RunMIQuery extends QueryModule {
         boolean isFirstRow = true;
         while((tempNode = (ANode)res.next()) != null) {
             BXNode domNode = BXNode.get(tempNode);
-            qg.defaultAddToDataTree(tempNode.parent(), parentPath.listIterator(0), isGlobal);
+            qg.addToDataTree(tempNode.parent(), parentPath.listIterator(0), isGlobal);
 
             if(!parentPath.peekLast().key.equals("Units")) {
                 QueryRow unitsRow = new QueryRow(null);
