@@ -36,6 +36,7 @@ import java.io.FileInputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.FileWriter;
+import java.io.FileOutputStream;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -310,6 +311,8 @@ public class CSVToXMLMain {
 			.newInstance();
         DOMImplementationLS implls = (DOMImplementationLS)reg.getDOMImplementation("XML 3.0");
         LSSerializer serializer = implls.createLSSerializer();
+        LSOutput lsOut = implls.createLSOutput();
+        lsOut.setByteStream(new FileOutputStream(file));
 		// specify output formating properties
         DOMConfiguration domConfig = serializer.getDomConfig();
         boolean prettyPrint = Boolean.parseBoolean(System.getProperty("ModelInterface.pretty-print", "true"));
@@ -317,7 +320,7 @@ public class CSVToXMLMain {
 
 		// create the searlizer and have it print the document
 
-            serializer.writeToURI(theDoc, file.toURI().toString());
+            serializer.write(theDoc, lsOut);
 		} catch (Exception e) {
 			System.err.println("Error outputing tree: " + e);
 			return false;

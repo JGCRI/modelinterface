@@ -1384,8 +1384,10 @@ public class DbViewer implements ActionListener, MenuAdder, BatchRunner {
 		// create the searlizer and have it print the document
 
 		try {
-            serializer.writeToURI(theDoc, file.toURI().toString());
-		} catch (LSException e) {
+            LSOutput lsOut = implls.createLSOutput();
+            lsOut.setByteStream(new FileOutputStream(file));
+            serializer.write(theDoc, lsOut);
+		} catch (Exception e) {
 			System.err.println("Error outputing tree: " + e);
 			return false;
 		}
