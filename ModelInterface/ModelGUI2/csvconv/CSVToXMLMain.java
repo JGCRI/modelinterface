@@ -238,9 +238,105 @@ public class CSVToXMLMain {
                     // id number
                     st = new StringTokenizer(inputLine, ",", false);
                     intValueStr = st.nextToken();
+                    String currHeader = tableIDMap.get(intValueStr);
+                    if(st.hasMoreTokens() && currHeader != null) {
+                        // need to modify header to generate additional levels for
+                        // infinite nesting
+                        String nestGenCommand = st.nextToken();
+                        // there are 4 parameters we are expecting to determine how to
+                        // generate the addional levels
+                        // 1) The "from" XML tag which was the original prior to nesting such as "subsector"
+                        // 2) The "to" XML tag which is the tag new tag to change to such as "nesting-subsector"
+                        //    Note due to limitations in header processing we have to append the depth of
+                        //    nesting to this tag (starting at 0).  Users should therefore include a node
+                        //    rename table following to fix it up after.
+                        // 3) The number of additional levels to generate (must be > 1)
+                        // 4) A bool to control if the final "from" XML tag should be renamed to the 'to" tag
+                        String[] nestParams = nestGenCommand.split("/");
+                        if(nestParams.length != 4) {
+                            throw new Exception("Expecting 4 infinite nesting params, got: "+nestParams.length);
+                        }
+                        String fromTag = nestParams[0];
+                        String toTag = nestParams[1];
+                        int numLevels = Integer.parseInt(nestParams[2]);
+                        boolean renameFinal = Boolean.parseBoolean(nestParams[3]);
+                        if(numLevels < 1) {
+                            throw new Exception("At least 1 level of nesting must be requested to generate additional levels.");
+                        }
+                        // First generate the extra tags parent/child tags which we assume will just tbe
+                        // the last columns on the table in order of depth
+                        // we will figure out where in the header to insert them later
+                        StringBuffer newLevelsHeader = new StringBuffer();
+                        int level = 0;
+                        while(level < numLevels-1) {
+                            newLevelsHeader.append(toTag).append(level).append("/+{name}")
+                                .append(toTag).append(++level).append(",");
+                        }
+                        if(newLevelsHeader.length() > 0) {
+                            newLevelsHeader.deleteCharAt(newLevelsHeader.length()-1);
+                        }
+                        // we treat the final additional level seperately because we assume
+                        // that the "subsector", for instance, column position should remain
+                        // the same as in the original header
+                        String finalLevel = toTag+level+"/+{name}";
+                        if(renameFinal) {
+                            finalLevel += toTag+(level+1);
+                        } else {
+                            finalLevel += fromTag;
+                        }
 
-                    if (tableIDMap.containsKey(intValueStr)) {
-                        tree.setHeader(tableIDMap.get(intValueStr));
+                        // split the header which will make processing it easier
+                        String[] headerSplitArr = currHeader.split(",");
+                        ArrayList<String> headerSplit = new ArrayList<String>(headerSplitArr.length);
+                        for(String header : headerSplitArr) {
+                            headerSplit.add(header.trim());
+                        }
+                        // First figure out the original "from" child tag was so we can
+                        // swap it with the newly generated one with the correct parent tag
+                        boolean done = false;
+                        for(int i = 0; i < headerSplit.size() && !done; ++i) {
+                            if(headerSplit.get(i).matches("^.*?/.+?"+fromTag+"$")) {
+                                String tempSwap = headerSplit.get(i);
+                                headerSplit.set(i, finalLevel);
+                                tempSwap = tempSwap.replaceFirst(fromTag, toTag+"0");
+                                if(newLevelsHeader.length() > 0) {
+                                    tempSwap += ",";
+                                }
+                                newLevelsHeader.insert(0, tempSwap);
+                                done = true;
+                            }
+                        }
+                        if(!done) {
+                            throw new Exception("Couldn't find "+fromTag+" child tag to substitute.");
+                        }
+                        // find the last column that reads from the table so we can insert the newly
+                        // generated nests after that
+                        done = newLevelsHeader.length() == 0;
+                        for(int i = headerSplit.size() -1; i >= 0 && !done; --i) {
+                            if(headerSplit.get(i).matches("^.*?/\\+.*$")) {
+                                headerSplit.add(i+1, newLevelsHeader.toString());
+                                done = true;
+                            }
+                        }
+                        if(!done) {
+                            throw new Exception("Couldn't find any table read columns.");
+                        }
+                        // if we need to rename the final "subsector", for instance, then we need to
+                        // find where in the original header it was a parent tag so we can rename
+                        // those as well
+                        if(renameFinal) {
+                            for(int i = 0; i < headerSplit.size(); ++i) {
+                                if(headerSplit.get(i).matches("^"+fromTag+"/.*$")) {
+                                    headerSplit.set(i, headerSplit.get(i).replaceFirst("^"+fromTag, toTag+(level+1)));
+                                }
+                            }
+                        }
+                        // finally put the header back together so it can be used to process the data
+                        currHeader = String.join(",", headerSplit);
+                    }
+
+                    if (currHeader != null) {
+                        tree.setHeader(currHeader);
                         stdInput.readLine(); // ignores this line
                         stdInput.readLine(); // ignores header line
 
