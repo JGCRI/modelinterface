@@ -31,6 +31,7 @@ package ModelInterface.ModelGUI2;
 
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
+import java.util.Properties;
 import java.awt.event.ComponentListener;
 import java.awt.event.ComponentEvent;
 
@@ -55,6 +56,8 @@ import ModelInterface.ModelGUI2.tables.CopyPaste;
 import ModelInterface.ModelGUI2.tables.MultiTableModel;
 import ModelInterface.ModelGUI2.xmldb.QueryBinding;
 import ModelInterface.ModelGUI2.xmldb.XMLDB;
+import filter.FilteredTable;
+import graphDisplay.ModelInterfaceUtil;
 import ModelInterface.ModelGUI2.xmldb.DbProcInterrupt;
 
 /**
@@ -62,6 +65,16 @@ import ModelInterface.ModelGUI2.xmldb.DbProcInterrupt;
  * the results after the queries are run as well as change the icon 
  * to indicate to the user that it is done running.
  * 
+ * Adds capability of running many queries parallel and will display the results
+ * after the queries are run as well as change the icon to indicate to the user
+ * that it is done running.
+ * 
+ *   Author			Action					Date		Flag
+ *  ============================================================ 			
+ *	TWU				Replace chart label 		1/2/2017	@1
+ *					to a chart application
+ *					Add capability to invoke
+ *					command line query
  */
 
 public class QueryResultsPanel extends JPanel {
@@ -223,13 +236,14 @@ public class QueryResultsPanel extends JPanel {
 	 * 
 	 */
 	private JComponent createSingleTableContent(QueryGenerator qg, QueryBinding singleBinding, final Object[] scenarioListValues, final Object[] regionListValues) throws Exception  {
-		BaseTableModel bt = new ComboTableModel(qg, scenarioListValues, regionListValues, singleBinding, context);
+		//aseTableModel bt = new ComboTableModel(qg, scenarioListValues, regionListValues, singleBinding, context);
 
+		final InterfaceMain main = InterfaceMain.getInstance();	//@1
+		JSplitPane sp = new JSplitPane();
+		//BaseTableModel 
+		ComboTableModel bt = new ComboTableModel(qg, scenarioListValues, regionListValues, singleBinding, context);
 		JTable jTable = bt.getAsSortedTable();
 		new CopyPaste(jTable);
-
-		jTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-
 		jTable.setCellSelectionEnabled(true);
 
 		javax.swing.table.TableColumn col;
@@ -243,63 +257,16 @@ public class QueryResultsPanel extends JPanel {
 			}
 			j++;
 		}
-		final JLabel labelChart = new JLabel();
-		try {
-			JFreeChart chart = bt.createChart(0,0);
-			Dimension chartDim = bt.getChartDimensions(chart);
-			BufferedImage chartImage = chart.createBufferedImage(
-					(int)chartDim.getWidth(), (int)chartDim.getHeight());
-			/*
-			BufferedImage chartImage = chart.createBufferedImage(
-					350, 350);
-			 */
 
+		Properties props = main.getProperties();//@1
+		// for restore legend information
+		String path = System.getProperty("user.dir") + "\\LegendBundle.properties" ;
+				//props.getProperty("lastDirectory") + "\\LegendBundle.properties";	//@1	
+		new FilteredTable(null,qg.toString(), //@1
+				/*ModelInterfaceUtil.getUnit(qg, (String) jTable.getValueAt(0, jTable.getColumnCount() - 1))*/new String[]{"TODO", "TODO"}, path, //@1
+				jTable, sp); //@1
 
-			labelChart.setIcon(new ImageIcon(chartImage));
-		} catch(Exception e) {
-			e.printStackTrace();
-			labelChart.setText("Cannot Create Chart");
-		}
-		final JSplitPane sp = new JSplitPane();
-		final JScrollPane tableScrollPane = new JScrollPane(jTable);
-		sp.setLeftComponent(tableScrollPane);
-		final JScrollPane chartScrollPane = new JScrollPane(labelChart);
-		chartScrollPane.getViewport().setBackground(labelChart.getBackground());
-		sp.setRightComponent(chartScrollPane);
-		sp.addComponentListener(new ComponentListener() {
-			public void componentResized(ComponentEvent e) {
-				// We want the divider to be as far right as possible without
-				// cutting off any of the chart however we won't know sizes until
-				// the layout has completed so we wait for that resize to ocur, note
-				// I am not sure where the extra -2 comes from but is needed
-				sp.setDividerLocation(sp.getWidth() - (int)chartScrollPane.getPreferredSize().getWidth() 
-					- (int)chartScrollPane.getVerticalScrollBar().getSize().getWidth()
-					- sp.getDividerSize() - 2);
-				// we only set the divider location the first time so we can go ahead and
-				// remove ourselves from listining to future events
-				sp.removeComponentListener(this);
-			}
-			public void componentHidden(ComponentEvent e) {
-				// do not care about this event
-			}
-			public void componentMoved(ComponentEvent e) {
-				// do not care about this event
-			}
-			public void componentShown(ComponentEvent e) {
-				// do not care about this event
-			}
-		});
-
-		// This is not the corrent location however we may want to go ahead and do it
-		// since the split pane will be showing before we can set the corrent divider location
-		// and it is pretty evedent that the resize is going on.  So if we do the following
-		// maybe it won't be as evident.
-		int chartWidth = (int)labelChart.getMinimumSize().getWidth();
-        final InterfaceMain main = InterfaceMain.getInstance();
-        final JFrame parentFrame = main.getFrame();
-		sp.setDividerLocation(parentFrame.getWidth()-chartWidth-sp.getDividerSize()-2);
-
-		main.fireProperty("Query", null, bt);
+		main.fireProperty("Query", null, bt); //@1
 		return sp;
 	}
 

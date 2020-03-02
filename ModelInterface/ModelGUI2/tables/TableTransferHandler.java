@@ -29,12 +29,19 @@
 */
 package ModelInterface.ModelGUI2.tables;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 
 import javax.swing.TransferHandler;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTabbedPane;
 
@@ -42,37 +49,84 @@ import java.io.IOException;
 
 import ModelInterface.ModelGUI2.tables.BaseTableModel;
 import ModelInterface.ModelGUI2.DbViewer;
+import ModelInterface.ModelGUI2.QueryResultsPanel;
+
+/**
+ *   Author			Action							Date		Flag
+ *  ================================================================== 			
+ *	TWU				Add capability to accept 		1/2/2017	@1
+ *					filtered Jtable data transfer
+ *					Add capability to export
+ *					data to clip board
+ */
 
 public class TableTransferHandler extends TransferHandler {
 	public boolean canImport(JComponent comp, DataFlavor[] transferFlavors) {
 		return false;
 	}
+
 	public int getSourceActions(JComponent c) {
 		return TransferHandler.COPY;
 	}
+
 	public boolean importData(JComponent comp, Transferable t) {
 		return false;
 	}
+
 	protected Transferable createTransferable(JComponent comp) {
 		return new TransferableTable(comp);
 	}
-	private class TransferableTable implements Transferable {
+	// @1
+	protected void exportDone(JComponent c, Transferable data, int action) {
+		JOptionPane pane = new JOptionPane(((TransferableTable)data).getCurRowCount() //jtable.getRowCount() 
+				+ " Rows Exported",
+				JOptionPane.INFORMATION_MESSAGE);
+		JDialog dialog = pane.createDialog(null, "");
+		dialog.setVisible(true);
+	}// @1
+
+	public class TransferableTable implements Transferable {
 		private BaseTableModel bt;
+		private JTable jtable;
 		private DataFlavor[] transFlavors;
+		private String fs;// --tai add
+		private int curRowCount = 0;//@1
+
 		public TransferableTable(JComponent comp) {
+
 			if(comp instanceof JTabbedPane) {
+
+				Component c = ((QueryResultsPanel) ((JTabbedPane) comp).getSelectedComponent()).getComponent(0);
+				// If a JPanel is returned, QueryResultsPanel returned a Panel
+				// with text,
+				// so no table can be extracted
+
+				if (c instanceof JSplitPane) {
+					Component c1 = ((JSplitPane) c).getLeftComponent();
+					if (c1 instanceof JScrollPane)
 				bt = DbViewer.getTableModelFromComponent(((JTabbedPane)comp).getSelectedComponent());
+					// @1
+					else {
+						JPanel jp = (JPanel) c1;
+						BorderLayout bl = (BorderLayout) jp.getLayout();
+						jtable = (JTable) ((JScrollPane) bl.getLayoutComponent("Center")).getViewport().getView();
+					}//@1
+				}
 			} else if(comp instanceof JTable) {
-				bt = (BaseTableModel)((JTable)comp).getModel();
+				bt = (BaseTableModel) ((JTable) comp).getModel(); // bt
+																	// (BaseTableModel)
 			} else {
 				throw new UnsupportedOperationException("Can't transfer this component");
 			}
 			transFlavors = new DataFlavor[1];
 			transFlavors[0] = DataFlavor.stringFlavor;
+
 		}
+
 		public DataFlavor[] getTransferDataFlavors() {
 			return transFlavors;
 		}
+
 		public boolean isDataFlavorSupported(DataFlavor flavor) {
 			for(DataFlavor tranFlavor : transFlavors) {
 				if(tranFlavor.equals(flavor)) {
@@ -81,13 +135,51 @@ public class TableTransferHandler extends TransferHandler {
 			}
 			return false;
 		}
-		public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
+
+		public String getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
 			if(!isDataFlavorSupported(flavor)) {
 				throw new UnsupportedFlavorException(flavor);
 			}
 			// only string for now..
+			if (bt != null)
 			return bt.exportToText('\t');
+			// @1
+			else {
+				if (fs != null)
+					return fs;
+				else
+					return packString(jtable);
+
+			}// @1
 		}
-	}
+		
+		// @1
+		protected String packString(JTable jtable) {
+			fs = "";
+			for (int i = 0; i < jtable.getColumnCount(); i++)
+				fs = fs + jtable.getColumnName(i) + "\t";
+			fs = fs + "\n";
+
+			for (int i = 0; i < jtable.getRowCount(); i++) {
+				for (int j = 0; j < jtable.getColumnCount(); j++) {
+					String cls = jtable.getColumnClass(j).getName();
+					if (cls.equals("java.lang.Double")) {
+						fs = fs + (String.valueOf(jtable.getValueAt(i, j))) + "\t";
+					} else
+						fs = fs + (String) jtable.getValueAt(i, j) + "\t";
+				}
+				fs = fs + "\n";
+				curRowCount = i;
+			}
+			return fs;
+		}
+
+		public int getCurRowCount() {
+			return curRowCount;
+		} //@1
+
+
+		}
+
 }
 

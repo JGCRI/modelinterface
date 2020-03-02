@@ -85,6 +85,13 @@ import java.awt.GraphicsEnvironment;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeEvent;
 
+/**
+ * Author Action Date Flag
+ * ============================================================ TWU Add Command
+ * Line 1/2/2017 @1 Invocation; Add a property to store Legend perference
+ */
+
+
 public class InterfaceMain implements ActionListener {
 	/**
 	 * Unique identifier used for serializing.
@@ -121,6 +128,8 @@ public class InterfaceMain implements ActionListener {
 	private UndoManager undoManager;
 
 	private List<MenuAdder> menuAdders;
+    // ***** add variable 'path' for command line parameter -DbOpen
+    static String path = null;// @1
 
     /**
      * The main GUI from the rest of the GUI components of the ModelInterface will rely on.
@@ -143,11 +152,12 @@ public class InterfaceMain implements ActionListener {
 			}
         });
 
-		// -b <batch file> -l <log file>
+		// -b <batch file> -l <log file> -o <dbpath>
 		OptionParser parser = new OptionParser();
 		parser.accepts("help", "print usage information").forHelp();
 		parser.accepts("b", "XML batch file to process").withRequiredArg();
 		parser.accepts("l", "log file into which to redirect ModelInterface output").withRequiredArg();
+        parser.accepts("o", "XML DB path to process").withRequiredArg();
 		
 		OptionSet opts = null;
 		try {
@@ -166,6 +176,12 @@ public class InterfaceMain implements ActionListener {
                 System.exit(1);
             }
             System.exit(1);
+        }
+
+        // @1
+        if (opts.has("o")) {
+            path = (String) opts.valueOf("o");
+            System.out.println("InterfaceMain: DB Path: " + path);
         }
 
         // if the -l option is set then we will redirect standard output to the specified log file
@@ -265,6 +281,12 @@ public class InterfaceMain implements ActionListener {
 			}
 		}
 		oldControl = "ModelInterface";
+        // ***** save 'path' value as a property value named 'paramPath'
+        if (path != null)// @1
+            savedProperties.setProperty("paramPath", path);// @1
+        else// @1
+            savedProperties.remove("paramPath");// @1
+
 	}
 
 	private void initialize() {
@@ -273,6 +295,11 @@ public class InterfaceMain implements ActionListener {
 		addMenuItems(menuMan);
 		addMenuAdderMenuItems(menuMan);
 		finalizeMenu(menuMan);
+        // ***** pass through DB Open Action and directly goes to DBVIew
+        // to open database
+        if (path != null)// @1
+            fireControlChange("DbViewer");// @1
+        // ***** change end
 	}
     public JFrame getFrame() {
         return mainFrame;

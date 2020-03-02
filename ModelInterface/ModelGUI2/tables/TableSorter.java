@@ -36,9 +36,15 @@ import java.util.*;
 import java.util.List;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.TableColumnModelEvent;
+import javax.swing.event.TableColumnModelListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.*;
+
+import graphDisplay.ModelInterfaceUtil;
 
 /**
  * TableSorter is a decorator for TableModels; adding sorting
@@ -90,6 +96,13 @@ import javax.swing.table.*;
  * @author Dan van Enckevort
  * @author Parwinder Sekhon
  * @version 2.0 02/27/04
+ * 
+ * Author			Action							Date		Flag
+ * ================================================================== 			
+ * 	TWU				Add capability to sort filtered 1/2/2017	@1
+ * 					Jtable
+ *					Add Auto Sort after column is 
+ *					moved
  */
 
 public class TableSorter extends AbstractTableModel {
@@ -125,11 +138,14 @@ public class TableSorter extends AbstractTableModel {
     private TableModelListener tableModelListener;
     private Map columnComparators = new HashMap();
     private List sortingColumns = new ArrayList();
+    private TableColumnModelListener tableColumnModelListener;
 
     public TableSorter() {
         this.mouseListener = new MouseHandler();
         this.tableModelListener = new TableModelHandler();
+		this.tableColumnModelListener = new TableSorterColumnModelListener();
     }
+
 
     public TableSorter(TableModel tableModel) {
         this();
@@ -170,8 +186,10 @@ public class TableSorter extends AbstractTableModel {
     }
 
     public void setTableHeader(JTableHeader tableHeader) {
-        if (this.tableHeader != null) {
+		if (this.tableHeader != null && !this.tableHeader.equals(tableHeader)) {
             this.tableHeader.removeMouseListener(mouseListener);
+			//@1
+			this.tableHeader.getColumnModel().removeColumnModelListener(tableColumnModelListener);
             TableCellRenderer defaultRenderer = this.tableHeader.getDefaultRenderer();
             if (defaultRenderer instanceof SortableHeaderRenderer) {
                 this.tableHeader.setDefaultRenderer(((SortableHeaderRenderer) defaultRenderer).tableCellRenderer);
@@ -180,10 +198,12 @@ public class TableSorter extends AbstractTableModel {
         this.tableHeader = tableHeader;
         if (this.tableHeader != null) {
             this.tableHeader.addMouseListener(mouseListener);
-            this.tableHeader.setDefaultRenderer(
-                    new SortableHeaderRenderer(this.tableHeader.getDefaultRenderer()));
+			this.tableHeader.setDefaultRenderer(new SortableHeaderRenderer(this.tableHeader.getDefaultRenderer()));
+			//@1
+			this.tableHeader.getColumnModel().addColumnModelListener(tableColumnModelListener);
         }
     }
+
 
     public boolean isSorting() {
         return sortingColumns.size() != 0;
@@ -222,6 +242,22 @@ public class TableSorter extends AbstractTableModel {
         sortingStatusChanged();
     }
 
+  //@1
+  	public void setSortingStatus(int[] columns, int status) {
+  		for (int i = 0; i < columns.length; i++) {
+  			int column = tableHeader.getColumnModel().getColumn(columns[i]).getModelIndex();
+  			Directive directive = getDirective(column);
+  			if (directive != EMPTY_DIRECTIVE) {
+  				sortingColumns.remove(directive);
+  			}
+  			if (status != NOT_SORTED) {
+  				sortingColumns.add(new Directive(column, status));
+  			}
+  		}
+  		sortingStatusChanged();
+  	}//@1
+
+    
     protected Icon getHeaderRendererIcon(int column, int size) {
         Directive directive = getDirective(column);
         if (directive == EMPTY_DIRECTIVE) {
@@ -410,6 +446,36 @@ public class TableSorter extends AbstractTableModel {
         }
     }
 
+  //@1
+  	private class TableSorterColumnModelListener implements TableColumnModelListener {
+
+  		public void columnAdded(TableColumnModelEvent arg0) {
+  		}
+
+  		public void columnMarginChanged(ChangeEvent arg0) {
+  		}
+
+  		public void columnMoved(TableColumnModelEvent e) {
+  			TableColumnModel columnModel = (TableColumnModel) e.getSource();// h.getColumnModel();
+  			int end = ModelInterfaceUtil.getDoubleTypeColIndex(tableModel);
+  			int[] columns = new int[end];
+  			for (int i = 0; i < end; i++)
+  				columns[i] = columnModel.getColumn(i).getModelIndex();
+  			cancelSorting();
+  			Arrays.sort(columns);
+  			setSortingStatus(columns, 1);
+  		}
+
+  		public void columnRemoved(TableColumnModelEvent arg0) {
+  		}
+
+  		public void columnSelectionChanged(ListSelectionEvent arg0) {
+  		}
+
+  	}//@1
+
+
+    
     private class MouseHandler extends MouseAdapter {
         public void mouseClicked(MouseEvent e) {
             JTableHeader h = (JTableHeader) e.getSource();

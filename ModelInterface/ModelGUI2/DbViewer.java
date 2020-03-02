@@ -81,6 +81,8 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.Point2D;
 import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Component;
@@ -128,6 +130,23 @@ import org.basex.query.value.item.Item;
 import org.basex.api.dom.BXNode;
 import org.basex.api.dom.BXDoc;
 import org.basex.util.Token;
+
+
+/*** *   Author			Action						Date		Flag
+*  ======================================================================= 			
+*	TWU				Add capability to allow 		1/2/2017	@1
+*					to invoke from command line 
+*					Allow  DBView to accept 
+*					filtered Jtable which is in 
+*					different table model and 
+*					container
+*					Add Copy to Clip board capability
+*					to allow large data paste to 
+*					excel file
+* 					Add a monitor to large data drag
+* 
+*/
+
 
 public class DbViewer implements ActionListener, MenuAdder, BatchRunner {
 	private Document queriesDoc;
@@ -260,6 +279,14 @@ public class DbViewer implements ActionListener, MenuAdder, BatchRunner {
 						main.getSaveAsMenu().addActionListener(thisViewer);
 						main.getSaveAsMenu().setEnabled(true);
 						queriesDoc = readQueries(queryFile);
+						// ***** add code for -DBOpen parameter
+						String path = prop.getProperty("paramPath"); //@1
+						if (path != null) {//@1
+							System.out.println("path: " + path);//@1
+							File afile = new File(path);//@1
+							 doOpenDB(afile);//@1
+						}//@1
+						// ***** end
 					}
 				}
 			}
@@ -1527,12 +1554,24 @@ public class DbViewer implements ActionListener, MenuAdder, BatchRunner {
 	}
 	private class TabDragListener implements MouseListener, MouseMotionListener {
 		MouseEvent firstMouseEvent = null;
+		Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard(); //@1
+
 		public void mousePressed(MouseEvent e) {
+			JComponent c = (JComponent)e.getSource(); //@1
 			if(tablesTabs.getTabCount() > 0 && 
 					tablesTabs.getBoundsAt(tablesTabs.getSelectedIndex()).contains(e.getPoint())) {
+				if (e.getButton() == 3) {//@1
+					//Tell the transfer handler to initiate the copy.
+					c.setCursor(Cursor
+							.getPredefinedCursor(Cursor.WAIT_CURSOR));//@1
+					tablesTabs.getTransferHandler().exportToClipboard(tablesTabs, 
+							clip, TransferHandler.COPY);//@1
+					c.setCursor(Cursor.getDefaultCursor());	//@1				
+				}//@1
 				firstMouseEvent = e;
 				e.consume();
 			}
+
 		}
 		public void mouseDragged(MouseEvent e) {
 			// make sure that there was a press first and that that tab has not
@@ -1551,11 +1590,14 @@ public class DbViewer implements ActionListener, MenuAdder, BatchRunner {
 				// Arbitrarily define a 5-pixel shift as the
 				// official beginning of a drag.
 				if (dx > 5 || dy > 5) {
-					JComponent c = (JComponent)e.getSource();
-					//Tell the transfer handler to initiate the drag.
+					JComponent c = (JComponent)e.getSource();//@1
+					c.setCursor(Cursor
+							.getPredefinedCursor(Cursor.WAIT_CURSOR));//@1
+					
 					tablesTabs.getTransferHandler().exportAsDrag(tablesTabs, 
 							firstMouseEvent, action);
 					firstMouseEvent = null;
+					c.setCursor(Cursor.getDefaultCursor());//@1
 				}
 
 			}
