@@ -32,6 +32,8 @@ package ModelInterface.ModelGUI2;
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 import java.util.Properties;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.awt.event.ComponentListener;
 import java.awt.event.ComponentEvent;
 
@@ -57,7 +59,6 @@ import ModelInterface.ModelGUI2.tables.MultiTableModel;
 import ModelInterface.ModelGUI2.xmldb.QueryBinding;
 import ModelInterface.ModelGUI2.xmldb.XMLDB;
 import filter.FilteredTable;
-import graphDisplay.ModelInterfaceUtil;
 import ModelInterface.ModelGUI2.xmldb.DbProcInterrupt;
 
 /**
@@ -236,10 +237,9 @@ public class QueryResultsPanel extends JPanel {
 	 * 
 	 */
 	private JComponent createSingleTableContent(QueryGenerator qg, QueryBinding singleBinding, final Object[] scenarioListValues, final Object[] regionListValues) throws Exception  {
-		//aseTableModel bt = new ComboTableModel(qg, scenarioListValues, regionListValues, singleBinding, context);
 
 		final InterfaceMain main = InterfaceMain.getInstance();	//@1
-		JSplitPane sp = new JSplitPane();
+		final JSplitPane sp = new JSplitPane();
 		//BaseTableModel 
 		ComboTableModel bt = new ComboTableModel(qg, scenarioListValues, regionListValues, singleBinding, context);
 		JTable jTable = bt.getAsSortedTable();
@@ -258,16 +258,49 @@ public class QueryResultsPanel extends JPanel {
 			j++;
 		}
 
-		Properties props = main.getProperties();//@1
 		// for restore legend information
 		String path = System.getProperty("user.dir") + "\\LegendBundle.properties" ;
-				//props.getProperty("lastDirectory") + "\\LegendBundle.properties";	//@1	
 		new FilteredTable(null,qg.toString(), //@1
-				/*ModelInterfaceUtil.getUnit(qg, (String) jTable.getValueAt(0, jTable.getColumnCount() - 1))*/new String[]{"TODO", "TODO"}, path, //@1
+				getUnit(qg, (String) jTable.getValueAt(0, jTable.getColumnCount() - 1)), path, //@1
 				jTable, sp); //@1
+
+        if (sp.getRightComponent()==null)
+            Runtime.getRuntime().runFinalization();
+        sp.addComponentListener(new ComponentListener() {
+            public void componentResized(ComponentEvent e) {
+                if (sp.getRightComponent()!=null) //@1
+                    sp.setDividerLocation(0.678); //@1
+            }
+
+            public void componentHidden(ComponentEvent e) {
+                // do not care about this event
+            }
+
+            public void componentMoved(ComponentEvent e) {
+                // do not care about this event
+            }
+
+            public void componentShown(ComponentEvent e) {
+                // do not care about this event
+            }
+        });
+
+        sp.updateUI();
 
 		main.fireProperty("Query", null, bt); //@1
 		return sp;
 	}
+
+    //@1
+    private String[] getUnit(QueryGenerator qg, String axis) {
+        String u = " (" + axis + ")";
+        String[] unit = new String[2];
+        if (qg != null) {
+            unit[0] = qg.getAxis2Name();
+            unit[1] = qg.getVariable() + u;
+        }
+        return unit;
+    }
+
 
 }
