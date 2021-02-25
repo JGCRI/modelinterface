@@ -61,6 +61,7 @@ import org.basex.query.value.node.ANode;
 import org.basex.query.value.node.DBNode;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.basex.io.IOFile;
 import org.basex.io.out.PrintOutput;
 import org.basex.io.serial.Serializer;
 
@@ -249,7 +250,7 @@ public class XMLDB {
                 System.err.println(aDocName+" matched "+docPre.length+" docs; != 1");
                 return false;
             }
-            final PrintOutput out = new PrintOutput(aLocation.getPath());
+            final PrintOutput out = new PrintOutput(new IOFile(aLocation));
             final Serializer outputter = Serializer.get(out);
             outputter.serialize(new DBNode(context.data(), docPre[0]));
             outputter.close();

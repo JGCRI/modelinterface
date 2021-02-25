@@ -43,11 +43,11 @@ import org.basex.query.*;
 import org.basex.query.iter.Iter;
 import org.basex.query.value.*;
 import org.basex.query.value.item.*;
-import org.basex.query.value.array.Array;
+import org.basex.query.value.array.XQArray;
 import org.basex.query.value.seq.StrSeq;
 import org.basex.query.value.seq.Empty;
 import org.basex.query.value.node.*;
-import org.basex.query.value.map.Map;
+import org.basex.query.value.map.XQMap;
 import org.basex.api.dom.BXNode;
 import org.basex.util.list.StringList;
 
@@ -134,13 +134,13 @@ public class RunMIQuery extends QueryModule {
             System.setErr(stderr);
         }
     }
-    private Map buildTable(QueryProcessor queryProc, QueryGenerator qg, boolean isGlobal) throws Exception {
+    private XQMap buildTable(QueryProcessor queryProc, QueryGenerator qg, boolean isGlobal) throws Exception {
         System.out.println("In Function: "+System.currentTimeMillis());
         // TODO: replicate these checks, currently just assuming they are all false
         boolean sumAll = false;
         boolean isTotal = false;
 
-        Map output = Map.EMPTY;
+        XQMap output = XQMap.EMPTY;
         ValueBuilder records = new ValueBuilder(queryContext);
         Iter res = queryProc.iter();
         ANode tempNode;
@@ -186,12 +186,12 @@ public class RunMIQuery extends QueryModule {
             }
             if(!skip) {
                 row[colIndex] = Str.get(domNode.getNodeValue());
-                records.add(Array.from(row));
+                records.add(XQArray.from(row));
             }
         }
         // the xquery wants the header as an array under the "names" key
         output = output.put(Str.get("names"),
-                Array.from(header.toArray(new Value[0])),
+                XQArray.from(header.toArray(new Value[0])),
                 queryContext.root.info);
         // and it wants the data as a sequence of arrays under the "records" key
         output = output.put(Str.get("records"),

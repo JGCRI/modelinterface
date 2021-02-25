@@ -979,7 +979,7 @@ public class QueryGenerator implements java.io.Serializable{
             }
         }
         ANode parentNode = currNode.parent();
-		if(parentNode.nodeType() != NodeType.DOC) {
+		if(parentNode.nodeType() != NodeType.DOCUMENT_NODE) {
             // recursively process parents
             defaultAddToDataTree(parentNode, parentPath, isGlobal);
         } else {

@@ -410,7 +410,7 @@ public class CostCurveQueryBuilder extends QueryBuilder {
             }
         }
         ANode parentNode = currNode.parent();
-		if(parentNode.nodeType() != NodeType.DOC) {
+		if(parentNode.nodeType() != NodeType.DOCUMENT_NODE) {
             // recursively process parents
             addToDataTree(parentNode, parentPath, isGlobal);
         } else {
