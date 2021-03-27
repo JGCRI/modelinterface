@@ -883,6 +883,13 @@ public class QueryGenerator implements java.io.Serializable{
         }
 		return tempMap;
 	}
+	public void addToDataTree(ANode currNode, ListIterator<QueryRow> parentPath, boolean isGlobal) throws Exception {
+		if(qb != null) {
+			qb.addToDataTree(currNode, parentPath, isGlobal);
+		} else {
+			defaultAddToDataTree(currNode, parentPath, isGlobal);
+		}
+    }
 	public void defaultAddToDataTree(ANode currNode, ListIterator<QueryRow> parentPath, boolean isGlobal) throws Exception {
         QueryRow currRow = null;
         if(parentPath.hasNext()) {
@@ -972,7 +979,7 @@ public class QueryGenerator implements java.io.Serializable{
             }
         }
         ANode parentNode = currNode.parent();
-		if(parentNode.nodeType() != NodeType.DOC) {
+		if(parentNode.nodeType() != NodeType.DOCUMENT_NODE) {
             // recursively process parents
             defaultAddToDataTree(parentNode, parentPath, isGlobal);
         } else {

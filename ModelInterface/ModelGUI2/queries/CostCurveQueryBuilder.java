@@ -31,6 +31,7 @@ package ModelInterface.ModelGUI2.queries;
 
 import ModelInterface.ModelGUI2.xmldb.XMLDB;
 import ModelInterface.common.DataPair;
+import ModelInterface.ModelGUI2.xmldb.QueryRow;
 
 import javax.swing.JList;
 import javax.swing.JButton;
@@ -40,6 +41,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.ListSelectionModel;
 
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Iterator;
@@ -50,6 +52,7 @@ import java.util.TreeMap;
 import java.util.EventListener;
 
 import org.basex.query.value.node.ANode;
+import org.basex.query.value.type.NodeType;
 import org.basex.api.dom.BXNode;
 import org.basex.api.dom.BXElem;
 
@@ -324,4 +327,105 @@ public class CostCurveQueryBuilder extends QueryBuilder {
 		} 
 		return tempMap;
 	}
+	public void addToDataTree(ANode currNode, ListIterator<QueryRow> parentPath, boolean isGlobal) throws Exception {
+        QueryRow currRow = null;
+        if(parentPath.hasNext()) {
+            currRow = parentPath.next();
+            if(currRow.id != null && currRow.id.is(currNode)) {
+                // The rest of this path is the same as the last node proccessed.
+                return;
+            } else {
+                currRow = new QueryRow(currNode);
+                parentPath.set(currRow);
+            }
+        } else {
+            currRow = new QueryRow(currNode);
+            parentPath.add(currRow);
+        }
+        BXNode currDOM = BXNode.get(currNode);
+
+		// cache node properties since these may need to go back to the database which could
+		// be expensive
+		String nodeName = currDOM.getNodeName();
+		// run functions can not utilize an attribute map cache since they rely on getNodeHandle
+		// which is not available in those kinds of queries
+		Map<String, String> attrMap = XMLDB.getAttrMapWithCache(currDOM);
+
+		// set the type as the node name if it does not have a type attribute
+		String type = attrMap.get("type");
+		if(type == null) {
+			type = nodeName;
+		}
+
+		// try to find the axis values at the current node
+		boolean setNodeLevel = false;
+		boolean setYearLevel = false;
+		if(nodeName.equals(qg.nodeLevel.getKey())) {
+			setNodeLevel = true;
+            currRow.key = qg.axis1Name;
+			if(qg.nodeLevel.getKey().equals("UndiscountedCost") || qg.nodeLevel.getKey().equals("DiscountedCost")) {
+				if(isGlobal) {
+					currRow.value = "Global";
+				} else {
+					currRow.value = attrMap.get("name");
+				}
+			} else if(isGlobal) {
+                currRow.value = "Global";
+			} else {
+                currRow.value = currDOM.getFirstChild().getFirstChild().getNodeValue();
+			}
+
+		}
+		if(nodeName.equals(qg.yearLevel.getKey())) {
+			setYearLevel = true;
+            if(setNodeLevel) {
+                currRow = new QueryRow(currNode);
+                if(parentPath.hasNext()) {
+                    parentPath.next();
+                    parentPath.set(currRow);
+                } else {
+                    parentPath.add(currRow);
+                }
+            }
+            currRow.key = qg.axis2Name;
+			if(qg.nodeLevel.getKey().equals("UndiscountedCost") || qg.nodeLevel.getKey().equals("DiscountedCost")) {
+                currRow.value = qg.nodeLevel.getKey();
+		} else {
+            if(qg.axis2Name.equals("Year")) {
+                currRow.value = currDOM.getFirstChild().getFirstChild().getNodeValue();
+            } else {
+                currRow.value = currDOM.getFirstChild().getNextSibling().getFirstChild().getNodeValue();
+            }
+		}
+
+		}
+		// if we should not collapse this node then pick out the attributes which
+		// check if we need to collapse this level
+		if(!setNodeLevel && !setYearLevel && !attrMap.isEmpty()) {
+            // TODO: add the ability to use showAttrMap
+			String attr = XMLDB.getAllAttr(attrMap, showAttrList);
+            if(!attr.equals("")) {
+                currRow.key = nodeName;
+                currRow.value = attr;
+            }
+        }
+        ANode parentNode = currNode.parent();
+		if(parentNode.nodeType() != NodeType.DOCUMENT_NODE) {
+            // recursively process parents
+            addToDataTree(parentNode, parentPath, isGlobal);
+        } else {
+            // We are at the top of the nesting and the stop point for recursion
+            // Generally there is nothing more to do however we need to correct
+            // for the special case there the distance from a query result to the
+            // top changes (the length of parentPath is changing).  We need to ensure
+            // there are no more items left on the list (except for Units).  This
+            // situation is not ideal as it defeats out caching strategy.
+            while(parentPath.hasNext()) {
+                QueryRow extraRow = parentPath.next();
+                if(extraRow.key == null || !extraRow.key.equals("Units")) {
+                    parentPath.remove();
+                }
+            }
+        }
+    }
 }

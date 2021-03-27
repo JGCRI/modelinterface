@@ -30,6 +30,7 @@
 package ModelInterface.ModelGUI2.queries;
 
 import ModelInterface.common.DataPair;
+import ModelInterface.ModelGUI2.xmldb.QueryRow;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -38,6 +39,7 @@ import java.util.Map;
 import java.util.Vector;
 import java.util.EventListener;
 import java.util.List;
+import java.util.ListIterator;
 
 public abstract class QueryBuilder implements java.io.Serializable {
 
@@ -90,4 +92,7 @@ public abstract class QueryBuilder implements java.io.Serializable {
 	public Map addToDataTree(ANode currNode, Map dataTree, DataPair<String, String> axisValue, boolean isGlobal) throws Exception {
 		return qg.defaultAddToDataTree(currNode, dataTree, axisValue, isGlobal);
 	}
+	public void addToDataTree(ANode currNode, ListIterator<QueryRow> parentPath, boolean isGlobal) throws Exception {
+        qg.defaultAddToDataTree(currNode, parentPath, isGlobal);
+    }
 }

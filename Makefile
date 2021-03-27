@@ -1,7 +1,7 @@
 
 # Java compiler options to target specific JVM versions to allow
 # backwards compatibility.
-JAVA_TARGET = -target 1.7 -source 1.7
+JAVA_TARGET = -target 1.8 -source 1.8
 
 ifeq ($(strip $(BUILD_DIR)),)
 	BUILD_DIR = ./
