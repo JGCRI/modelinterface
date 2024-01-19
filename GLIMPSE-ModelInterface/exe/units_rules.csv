@@ -1,0 +1,23 @@
+fromUnit,toUnit,conversion,query,heading1,value1,heading2,value2,heading3,value3,
+Tg,ch4agr,0.2,All Emissions by Region,GHG,CH4_AGR
+Tg,justCH4,0.1,All Emissions by Region,GHG,CH4
+Tg,ch4awb,0.3,All Emissions by Region,GHG,CH4_AWB
+"EJ","billion gallons","0.13176","Final energy consumption by aggregate sector","sector","transport-*",,,,,,
+#"EJ","billion gallons","0.13176","Transport final energy by tech and fuel","technology","*Liquids",,,,,,
+#EJ,GWh,277778,Transport final energy by tech and fuel,technology,BEV,,,,,,
+#EJ,billion cf,947.817,Transport final energy by tech and fuel,technology,NG,,,,,,
+#EJ,GWH2,12345
+#million pass-km,billion pass-mi,0.00062137,Passenger car and truck service output by tech,,,,,,,,
+#EJ,MMBTU,9.48E+08,Energy inputs to electricity production (GCAM-USA),,,,,,,,
+#EJ,TWh,277.778,Electricity generation by gen and cooling tech (incl cogen)(GCAM-USA),,,,,,,,
+#Tg,million short tons,1.1023,"NOx,SO2,PM2.5 by aggregate sector",,,,,,,,
+#MTC,MTCO2,3.666,,,,,,,,,    
+#Tg,MTCO2eq,28,All emissions by region,GHG,CH4,,,,,,
+#Tg,MTCO2eq,298,All emissions by region,GHG,N2O,,,,,,
+#1990$s,2020$s,1.98,,,,,,,,,
+#1975$s,2020$s,4.81,,,,,,,,,
+#1975$/GJ,2020$/kWh,0.017316,Prices for all markets in asia,market,*elect*,,,,,,
+#1975$/GJ,2020$/gal,0.6337,Prices for all markets,market,*refined liquids*,,,,,,
+#1975$/GJ,2020$/gal,0.6337,Prices of all markets,,,,,,,
+#1975$/GJ,2020$/kWh,0.017316
+

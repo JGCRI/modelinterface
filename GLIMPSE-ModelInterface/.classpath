@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="MIEnhancements/src"/>
+	<classpathentry kind="src" path="mif411/src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/commons-discovery-0.5.jar"/>
+	<classpathentry kind="lib" path="lib/commons-logging-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/jcommon-1.0.23.jar"/>
+	<classpathentry kind="lib" path="lib/jep-2.3.0.jar"/>
+	<classpathentry kind="lib" path="lib/joost-0.9.1.jar"/>
+	<classpathentry kind="lib" path="lib/poi-5.2.3.jar"/>
+	<classpathentry kind="lib" path="lib/poi-ooxml-5.2.3.jar"/>
+	<classpathentry kind="lib" path="lib/poi-scratchpad-5.2.3.jar"/>
+	<classpathentry kind="lib" path="lib/BaseX-9.5.2.jar"/>
+	<classpathentry kind="lib" path="lib/jfreechart-1.5.4.jar"/>
+	<classpathentry kind="lib" path="lib/jopt-simple-5.0.4.jar"/>
+	<classpathentry kind="output" path="MIEnhancements/bin"/>
+</classpath>

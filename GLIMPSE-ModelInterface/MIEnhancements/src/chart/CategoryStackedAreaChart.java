@@ -1,0 +1,56 @@
+package chart;
+
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.StackedAreaRenderer;
+import org.jfree.data.category.DefaultCategoryDataset;
+
+/**
+ * The class handle to create a StackedArea JFreeChart with all properties stored in Chart. 
+ * 
+ *    Author			Action						Date		Flag
+ *  ======================================================================= 			
+ *	TWU				created 						1/2/2016	
+ */
+
+public class CategoryStackedAreaChart extends CategoryChart {
+
+	public CategoryStackedAreaChart(String path, String graphName, String meta,
+			String[] titles, String[] axis_name_unit, String legend, int[] color, int[] pColor,
+			int[] pattern, int[] lineStrokes, String[][] annotationText,
+			DefaultCategoryDataset dataset, int relativeColIndex, boolean ShowLineAndShape, String graphType) {
+		super(path, graphName, meta, titles, axis_name_unit, legend,  color, pColor,
+				pattern, lineStrokes, annotationText, dataset,
+				relativeColIndex, ShowLineAndShape,graphType);
+
+		chartClassName = "chart.CategoryStackedAreaChart";
+		crtChart();
+	}
+
+	public CategoryStackedAreaChart(String path, String graphName, String meta, String[] titles,
+			String[] axis_name_unit, String legend, String column, String[][] annotationText, String[][] data,
+			int relativeColIndex) {
+		super(path, graphName, meta, titles, axis_name_unit, legend, column, annotationText,
+				data, relativeColIndex);
+
+		chartClassName = "chart.CategoryStackedAreaChart";
+		crtChart();
+	}
+	
+	private void crtChart() {
+		chart = ChartFactory.createStackedAreaChart("", verifyAxisName_unit(0),
+				verifyAxisName_unit(1), dataset, PlotOrientation.VERTICAL,
+				true, true, false);
+		plot = (CategoryPlot) chart.getPlot();
+		plot.setDataset(0, dataset);
+		StackedAreaRenderer renderer = (StackedAreaRenderer) plot
+				.getRenderer(0);
+		plot.setRenderer(0, renderer);
+		setPlotProperty();
+		setLegendProperty();
+		setAxisProperty();
+		RendererUtil.setRendererProperty(renderer);
+		setChartProperty();
+	}
+}
